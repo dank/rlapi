@@ -2,12 +2,15 @@ package rlapi
 
 import (
 	"bytes"
-	"crypto/tls"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"strings"
+	"sync"
+	"sync/atomic"
 
 	"github.com/gorilla/websocket"
 )
@@ -29,37 +32,173 @@ func (e psyNetError) Error() string {
 }
 
 type PsyNet struct {
-	client *http.Client
-	wsConn *websocket.Conn
+	client      *http.Client
+	wsConn      *websocket.Conn
+	requestID   int64
+	pendingReqs map[string]chan *PsyResponse
+	mu          sync.Mutex
+	logger      *slog.Logger
+}
+
+type PsyRequest struct {
+	Service   string      `json:"PsyService"`
+	Sig       string      `json:"PsySig"`
+	RequestID string      `json:"PsyRequestID"`
+	Data      interface{} `json:"-"`
+}
+
+type PsyResponse struct {
+	ResponseID string          `json:"PsyResponseID"`
+	Result     json.RawMessage `json:"Result"`
+	Error      *psyNetError    `json:"Error"`
 }
 
 func NewPsyNet() *PsyNet {
 	return &PsyNet{
-		client: &http.Client{},
+		client:      &http.Client{},
+		pendingReqs: make(map[string]chan *PsyResponse),
+		logger:      slog.Default(),
 	}
 }
 
 func (p *PsyNet) establishSocket(url string, psyToken string, sessionID string) error {
-	dialer := websocket.Dialer{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
+	p.logger.Debug("establishing websocket connection", slog.String("url", url))
 
-	headers := http.Header{
+	dialer := websocket.Dialer{}
+	conn, _, err := dialer.Dial(url, http.Header{
 		"PsyBuildID":     []string{rlBuildId},
 		"User-Agent":     []string{fmt.Sprintf("RL Win/%s gzip", rlVersion)},
 		"PsyEnvironment": []string{"Prod"},
 		"PsyToken":       []string{psyToken},
 		"PsySessionID":   []string{sessionID},
-	}
-
-	conn, _, err := dialer.Dial(url, headers)
+	})
 	if err != nil {
 		return fmt.Errorf("failed to dial websocket: %w", err)
 	}
 
 	p.wsConn = conn
 
+	go p.readMessages()
+
 	return nil
+}
+
+func (p *PsyNet) nextRequestID() string {
+	id := atomic.AddInt64(&p.requestID, 1)
+	return fmt.Sprintf("PsyNetMessage_X_%d", id)
+}
+
+func (p *PsyNet) readMessages() {
+	defer func() {
+		p.wsConn.Close()
+	}()
+
+	for {
+		_, message, err := p.wsConn.ReadMessage()
+		if err != nil {
+			p.logger.Error("websocket read error", slog.Any("err", err))
+			break
+		}
+
+		p.logger.Debug("received websocket response", slog.String("message", string(message)))
+
+		var response PsyResponse
+		if err := json.Unmarshal(message, &response); err != nil {
+			p.logger.Warn("failed to unmarshal websocket message", slog.Any("err", err), slog.String("message", string(message)))
+			continue
+		}
+
+		p.mu.Lock()
+		ch, exists := p.pendingReqs[response.ResponseID]
+		p.mu.Unlock()
+
+		if exists {
+			ch <- &response
+		}
+	}
+}
+
+func (p *PsyNet) sendRequestAsync(ctx context.Context, service string, data interface{}) (<-chan *PsyResponse, error) {
+	if p.wsConn == nil {
+		return nil, fmt.Errorf("websocket connection not established")
+	}
+
+	requestID := p.nextRequestID()
+	p.logger.Debug("sending websocket request", slog.String("requestID", requestID), slog.String("service", service), slog.Any("data", data))
+
+	respCh := make(chan *PsyResponse, 1)
+
+	p.mu.Lock()
+	p.pendingReqs[requestID] = respCh
+	p.mu.Unlock()
+
+	go func() {
+		<-ctx.Done()
+		p.mu.Lock()
+		delete(p.pendingReqs, requestID)
+		p.mu.Unlock()
+		close(respCh)
+	}()
+
+	headers := map[string]string{
+		"PsyService":   service,
+		"PsySig":       "fMPMoP62q5HjQXDLS6U5vH0oiWh2Y5Ji8nJDVOPJH9U=", // Placeholder sig
+		"PsyRequestID": requestID,
+	}
+
+	var message strings.Builder
+	for key, value := range headers {
+		message.WriteString(fmt.Sprintf("%s: %s\n", key, value))
+	}
+	message.WriteString("\n")
+
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request data: %w", err)
+	}
+	message.Write(jsonData)
+
+	p.logger.Debug("sending websocket request", slog.String("requestID", requestID), slog.String("message", message.String()))
+
+	p.mu.Lock()
+	err = p.wsConn.WriteMessage(websocket.TextMessage, []byte(message.String()))
+	p.mu.Unlock()
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to send request: %w", err)
+	}
+
+	return respCh, nil
+}
+
+func (p *PsyNet) awaitResponse(ctx context.Context, respCh <-chan *PsyResponse, result interface{}) error {
+	select {
+	case response := <-respCh:
+		p.mu.Lock()
+		delete(p.pendingReqs, response.ResponseID)
+		p.mu.Unlock()
+
+		if response.Error != nil {
+			return response.Error
+		}
+
+		if err := json.Unmarshal(response.Result, result); err != nil {
+			return fmt.Errorf("failed to unmarshal response: %w", err)
+		}
+
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
+
+func (p *PsyNet) sendRequestSync(ctx context.Context, service string, data interface{}, result interface{}) error {
+	respCh, err := p.sendRequestAsync(ctx, service, data)
+	if err != nil {
+		return err
+	}
+
+	return p.awaitResponse(ctx, respCh, result)
 }
 
 func (p *PsyNet) postJSON(path []string, params interface{}, result interface{}) error {
@@ -69,6 +208,8 @@ func (p *PsyNet) postJSON(path []string, params interface{}, result interface{})
 	if err != nil {
 		return fmt.Errorf("failed to marshal params: %w", err)
 	}
+
+	p.logger.Debug("sending http request", slog.String("url", url), slog.String("body", string(body)))
 
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(body))
 	if err != nil {
@@ -92,6 +233,8 @@ func (p *PsyNet) postJSON(path []string, params interface{}, result interface{})
 	if err != nil {
 		return fmt.Errorf("failed to read response body: %w", err)
 	}
+
+	p.logger.Debug("received http response", slog.String("status", resp.Status), slog.String("body", string(respBytes)))
 
 	var wrapper struct {
 		Result json.RawMessage `json:"Result"`
