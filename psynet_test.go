@@ -102,7 +102,7 @@ func TestPsyNet_SendRequestSync(t *testing.T) {
 
 	// Setup expected response
 	expectedResponse := &PsyResponse{
-		Result: json.RawMessage(`{"shops": [{"id": 1, "name": "test shop"}]}`),
+		Result: json.RawMessage(`{"Result":{"shops": [{"id": 1, "name": "test shop"}]}}`),
 	}
 	mockServer.SetResponse("PsyNetMessage_X_0", expectedResponse)
 
@@ -140,7 +140,7 @@ func TestPsyNet_SendRequestAsync(t *testing.T) {
 
 	// Setup expected response
 	expectedResponse := &PsyResponse{
-		Result: json.RawMessage(`{"async": "test"}`),
+		Result: json.RawMessage(`{"Result":{"async": "test"}}`),
 	}
 	mockServer.SetResponse("PsyNetMessage_X_0", expectedResponse)
 
@@ -183,7 +183,7 @@ func TestPsyNet_ConcurrentRequests(t *testing.T) {
 	// Setup responses for multiple requests
 	for i := 1; i <= 3; i++ {
 		response := &PsyResponse{
-			Result: json.RawMessage(fmt.Sprintf(`{"request": %d}`, i)),
+			Result: json.RawMessage(fmt.Sprintf(`{"Result":{"request": %d}}`, i)),
 		}
 		mockServer.SetResponse(fmt.Sprintf("PsyNetMessage_X_%d", i-1), response)
 	}
@@ -371,4 +371,78 @@ func TestPsyNet_ConcurrentContextCancellation(t *testing.T) {
 	if finalCount != 0 {
 		t.Errorf("Memory leak: %d pending requests remain", finalCount)
 	}
+}
+
+func TestParseMessage(t *testing.T) {
+	p := &PsyNet{}
+
+	t.Run("valid result", func(t *testing.T) {
+		input := fmt.Sprintf("PsyTime: %d\r\nPsySig: test_sig\r\nPsyResponseID: %s\r\n\r\n%s", time.Now().Unix(), "PsyNetMessage_X_1", `{"Result":{"Message":"ok"}}`)
+
+		resp, err := p.parseMessage(input)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if resp == nil {
+			t.Fatal("expected non-nil response")
+		}
+		if resp.ResponseID != "PsyNetMessage_X_1" {
+			t.Errorf("ResponseID = %q, want %q", resp.ResponseID, "PsyNetMessage_X_1")
+		}
+
+		var msg struct {
+			Message string
+		}
+		err = json.Unmarshal(resp.Result, &msg)
+		if err != nil {
+			t.Fatalf("json error: %v", err)
+		}
+		if msg.Message != "ok" {
+			t.Errorf("message = %q, want %q", msg.Message, "ok")
+		}
+	})
+
+	t.Run("error payload", func(t *testing.T) {
+		input := fmt.Sprintf("PsyTime: %d\r\nPsySig: test_sig\r\nPsyResponseID: %s\r\n\r\n%s", time.Now().Unix(), "PsyNetMessage_X_1", `{"Error":{"Type":"InvalidParameters","Message":""}}`)
+
+		resp, err := p.parseMessage(input)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if resp == nil {
+			t.Fatal("expected non-nil response")
+		}
+		if resp.ResponseID != "PsyNetMessage_X_1" {
+			t.Errorf("ResponseID = %q, want %q", resp.ResponseID, "PsyNetMessage_X_1")
+		}
+		if resp.Error.Type != "InvalidParameters" {
+			t.Errorf("Error.Message = %q, want %q", resp.Error.Error(), "InvalidParameters")
+		}
+	})
+
+	t.Run("missing PsyResponseID header", func(t *testing.T) {
+		input := fmt.Sprintf("\r\n\r\n%s", `{"Result":{"Message":"ok"}}`)
+
+		resp, err := p.parseMessage(input)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if resp == nil {
+			t.Fatal("expected non-nil response")
+		}
+		if resp.ResponseID != "" {
+			t.Errorf("ResponseID = %q, want empty", resp.ResponseID)
+		}
+
+		var msg struct {
+			Message string
+		}
+		err = json.Unmarshal(resp.Result, &msg)
+		if err != nil {
+			t.Fatalf("json error: %v", err)
+		}
+		if msg.Message != "ok" {
+			t.Errorf("message = %q, want %q", msg.Message, "ok")
+		}
+	})
 }

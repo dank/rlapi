@@ -132,17 +132,14 @@ func (p *PsyNet) parseMessage(message string) (*PsyResponse, error) {
 
 	responseID := headers["PsyResponseID"]
 
-	var jsonResult json.RawMessage
+	var jsonResult PsyResponse
 	if err := json.Unmarshal([]byte(jsonPayload), &jsonResult); err != nil {
 		return nil, fmt.Errorf("failed to parse JSON payload: %w", err)
 	}
 
-	response := &PsyResponse{
-		ResponseID: responseID,
-		Result:     jsonResult,
-	}
+	jsonResult.ResponseID = responseID
 
-	return response, nil
+	return &jsonResult, nil
 }
 
 func (p *PsyNet) pingHandler() {
