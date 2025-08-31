@@ -37,7 +37,7 @@ type authPlayerResponse struct {
 }
 
 // AuthPlayer performs a handshake with PsyNet to establish a WebSocket connection
-func (p *PsyNet) AuthPlayer(platform Platform, authToken string, accountName string, accountID string) error {
+func (p *PsyNet) AuthPlayer(platform Platform, authToken string, accountID string, accountName string) error {
 	localPlayerId := fmt.Sprintf("%s|%s|0", platform, accountID)
 	req := &authPlayerRequest{
 		Platform:            string(platform),
@@ -46,7 +46,7 @@ func (p *PsyNet) AuthPlayer(platform Platform, authToken string, accountName str
 		Language:            "INT",
 		AuthTicket:          authToken,
 		BuildRegion:         "",
-		FeatureSet:          rlFeatureSet,
+		FeatureSet:          featureSet,
 		Device:              "PC",
 		LocalFirstPlayerID:  localPlayerId,
 		SkipAuth:            false,

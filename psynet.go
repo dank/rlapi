@@ -14,16 +14,18 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
 
 const (
 	baseURL      = "https://api.rlpp.psynet.gg/rpc"
-	rlFeatureSet = "PrimeUpdate55_1"
-	rlVersion    = "250811.43331.492665"
-	rlBuildId    = "151471783"
+	gameVersion  = "250811.43331.492665"
+	featureSet   = "PrimeUpdate55_1"
+	psyBuildId   = "151471783"
 	psySigKey    = "c338bd36fb8c42b1a431d30add939fc7"
+	pingInterval = 20 * time.Second
 )
 
 type psyNetError struct {
@@ -70,8 +72,8 @@ func (p *PsyNet) establishSocket(url string, psyToken string, sessionID string) 
 
 	dialer := websocket.Dialer{}
 	conn, _, err := dialer.Dial(url, http.Header{
-		"PsyBuildID":     []string{rlBuildId},
-		"User-Agent":     []string{fmt.Sprintf("RL Win/%s gzip", rlVersion)},
+		"PsyBuildID":     []string{psyBuildId},
+		"User-Agent":     []string{fmt.Sprintf("RL Win/%s gzip", gameVersion)},
 		"PsyEnvironment": []string{"Prod"},
 		"PsyToken":       []string{psyToken},
 		"PsySessionID":   []string{sessionID},
@@ -83,6 +85,7 @@ func (p *PsyNet) establishSocket(url string, psyToken string, sessionID string) 
 	p.wsConn = conn
 
 	go p.readMessages()
+	go p.pingHandler()
 
 	return nil
 }
@@ -100,6 +103,32 @@ func (p *PsyNet) generatePsySig(body []byte) string {
 	return base64.StdEncoding.EncodeToString(h.Sum(nil))
 }
 
+func (p *PsyNet) Close() error {
+	if p.wsConn != nil {
+		return p.wsConn.Close()
+	}
+	return nil
+}
+
+func (p *PsyNet) pingHandler() {
+	ticker := time.NewTicker(pingInterval)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		p.mu.Lock()
+		if p.wsConn != nil {
+			if err := p.wsConn.WriteMessage(websocket.TextMessage, []byte("PsyPing: \n\n")); err != nil {
+				p.logger.Error("failed to send websocket ping", slog.Any("err", err))
+				p.mu.Unlock()
+				return
+			}
+
+			p.logger.Debug("sent websocket ping")
+		}
+		p.mu.Unlock()
+	}
+}
+
 func (p *PsyNet) readMessages() {
 	defer func() {
 		p.wsConn.Close()
@@ -108,11 +137,16 @@ func (p *PsyNet) readMessages() {
 	for {
 		_, message, err := p.wsConn.ReadMessage()
 		if err != nil {
-			p.logger.Error("websocket read error", slog.Any("err", err))
+			p.logger.Error("failed to read websocket message", slog.Any("err", err))
 			break
 		}
 
 		p.logger.Debug("received websocket response", slog.String("message", string(message)))
+
+		if strings.HasPrefix(string(message), "PsyPong:") {
+			p.logger.Debug("received websocket pong")
+			continue
+		}
 
 		var response PsyResponse
 		if err := json.Unmarshal(message, &response); err != nil {
@@ -230,8 +264,8 @@ func (p *PsyNet) postJSON(path []string, params interface{}, result interface{})
 	}
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("User-Agent", fmt.Sprintf("RL Win/%s gzip (x86_64-pc-win32) curl-7.67.0 Schannel", rlVersion))
-	req.Header.Set("PsyBuildID", rlBuildId)
+	req.Header.Set("User-Agent", fmt.Sprintf("RL Win/%s gzip (x86_64-pc-win32) curl-7.67.0 Schannel", gameVersion))
+	req.Header.Set("PsyBuildID", psyBuildId)
 	req.Header.Set("PsyEnvironment", "Prod")
 	req.Header.Set("PsyRequestID", p.getRequestID())
 	req.Header.Set("PsySig", p.generatePsySig(body))
