@@ -102,7 +102,7 @@ func TestPsyNet_SendRequestSync(t *testing.T) {
 	expectedResponse := &PsyResponse{
 		Result: json.RawMessage(`{"shops": [{"id": 1, "name": "test shop"}]}`),
 	}
-	mockServer.SetResponse("PsyNetMessage_X_1", expectedResponse)
+	mockServer.SetResponse("PsyNetMessage_X_0", expectedResponse)
 
 	// Test sync request
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -140,7 +140,7 @@ func TestPsyNet_SendRequestAsync(t *testing.T) {
 	expectedResponse := &PsyResponse{
 		Result: json.RawMessage(`{"async": "test"}`),
 	}
-	mockServer.SetResponse("PsyNetMessage_X_1", expectedResponse)
+	mockServer.SetResponse("PsyNetMessage_X_0", expectedResponse)
 
 	// Test async request
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -183,7 +183,7 @@ func TestPsyNet_ConcurrentRequests(t *testing.T) {
 		response := &PsyResponse{
 			Result: json.RawMessage(fmt.Sprintf(`{"request": %d}`, i)),
 		}
-		mockServer.SetResponse(fmt.Sprintf("PsyNetMessage_X_%d", i), response)
+		mockServer.SetResponse(fmt.Sprintf("PsyNetMessage_X_%d", i-1), response)
 	}
 
 	// Send multiple concurrent requests
@@ -293,18 +293,18 @@ func TestPsyNet_RequestIDIncrementing(t *testing.T) {
 	psyNet := NewPsyNet()
 
 	// Test that requestID increments properly
-	id1 := psyNet.nextRequestID()
-	id2 := psyNet.nextRequestID()
-	id3 := psyNet.nextRequestID()
+	id1 := psyNet.getRequestID()
+	id2 := psyNet.getRequestID()
+	id3 := psyNet.getRequestID()
 
-	if id1 != "PsyNetMessage_X_1" {
-		t.Errorf("Expected first request ID to be 'PsyNetMessage_X_1', got '%s'", id1)
+	if id1 != "PsyNetMessage_X_0" {
+		t.Errorf("Expected first request ID to be 'PsyNetMessage_X_0', got '%s'", id1)
 	}
-	if id2 != "PsyNetMessage_X_2" {
-		t.Errorf("Expected second request ID to be 'PsyNetMessage_X_2', got '%s'", id2)
+	if id2 != "PsyNetMessage_X_1" {
+		t.Errorf("Expected second request ID to be 'PsyNetMessage_X_1', got '%s'", id2)
 	}
-	if id3 != "PsyNetMessage_X_3" {
-		t.Errorf("Expected third request ID to be 'PsyNetMessage_X_3', got '%s'", id3)
+	if id3 != "PsyNetMessage_X_2" {
+		t.Errorf("Expected third request ID to be 'PsyNetMessage_X_2', got '%s'", id3)
 	}
 }
 

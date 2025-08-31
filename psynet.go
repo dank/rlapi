@@ -3,6 +3,9 @@ package rlapi
 import (
 	"bytes"
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -20,6 +23,7 @@ const (
 	rlFeatureSet = "PrimeUpdate55_1"
 	rlVersion    = "250811.43331.492665"
 	rlBuildId    = "151471783"
+	psySigKey    = "c338bd36fb8c42b1a431d30add939fc7"
 )
 
 type psyNetError struct {
@@ -83,9 +87,17 @@ func (p *PsyNet) establishSocket(url string, psyToken string, sessionID string) 
 	return nil
 }
 
-func (p *PsyNet) nextRequestID() string {
-	id := atomic.AddInt64(&p.requestID, 1)
+func (p *PsyNet) getRequestID() string {
+	id := atomic.LoadInt64(&p.requestID)
+	atomic.AddInt64(&p.requestID, 1)
 	return fmt.Sprintf("PsyNetMessage_X_%d", id)
+}
+
+func (p *PsyNet) generatePsySig(body []byte) string {
+	h := hmac.New(sha256.New, []byte(psySigKey))
+	h.Write([]byte("-"))
+	h.Write(body)
+	return base64.StdEncoding.EncodeToString(h.Sum(nil))
 }
 
 func (p *PsyNet) readMessages() {
@@ -123,7 +135,7 @@ func (p *PsyNet) sendRequestAsync(ctx context.Context, service string, data inte
 		return nil, fmt.Errorf("websocket connection not established")
 	}
 
-	requestID := p.nextRequestID()
+	requestID := p.getRequestID()
 	p.logger.Debug("sending websocket request", slog.String("requestID", requestID), slog.String("service", service), slog.Any("data", data))
 
 	respCh := make(chan *PsyResponse, 1)
@@ -140,9 +152,14 @@ func (p *PsyNet) sendRequestAsync(ctx context.Context, service string, data inte
 		close(respCh)
 	}()
 
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request data: %w", err)
+	}
+
 	headers := map[string]string{
 		"PsyService":   service,
-		"PsySig":       "fMPMoP62q5HjQXDLS6U5vH0oiWh2Y5Ji8nJDVOPJH9U=", // Placeholder sig
+		"PsySig":       p.generatePsySig(jsonData),
 		"PsyRequestID": requestID,
 	}
 
@@ -152,10 +169,6 @@ func (p *PsyNet) sendRequestAsync(ctx context.Context, service string, data inte
 	}
 	message.WriteString("\n")
 
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal request data: %w", err)
-	}
 	message.Write(jsonData)
 
 	p.logger.Debug("sending websocket request", slog.String("requestID", requestID), slog.String("message", message.String()))
@@ -218,6 +231,10 @@ func (p *PsyNet) postJSON(path []string, params interface{}, result interface{})
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("User-Agent", fmt.Sprintf("RL Win/%s gzip (x86_64-pc-win32) curl-7.67.0 Schannel", rlVersion))
+	req.Header.Set("PsyBuildID", rlBuildId)
+	req.Header.Set("PsyEnvironment", "Prod")
+	req.Header.Set("PsyRequestID", p.getRequestID())
+	req.Header.Set("PsySig", p.generatePsySig(body))
 
 	resp, err := p.client.Do(req)
 	if err != nil {
