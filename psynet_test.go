@@ -66,15 +66,17 @@ func (m *MockWSServer) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			m.messages = append(m.messages, msg)
 			// Parse PsyRequestID from the message
 			if strings.Contains(msg, "PsyRequestID:") {
-				lines := strings.Split(msg, "\n")
+				lines := strings.Split(msg, "\r\n")
 				for _, line := range lines {
 					if strings.HasPrefix(line, "PsyRequestID:") {
 						requestID := strings.TrimSpace(strings.TrimPrefix(line, "PsyRequestID:"))
 
 						// Send predefined response if available
 						if response, exists := m.responses[requestID]; exists {
-							respJSON, _ := json.Marshal(response)
-							conn.WriteMessage(websocket.TextMessage, respJSON)
+							// Format as PsyNet message with headers and the Result as JSON payload
+							psyNetResponse := fmt.Sprintf("PsyTime: %d\r\nPsySig: test_sig\r\nPsyResponseID: %s\r\n\r\n%s",
+								time.Now().Unix(), requestID, string(response.Result))
+							conn.WriteMessage(websocket.TextMessage, []byte(psyNetResponse))
 						}
 						break
 					}

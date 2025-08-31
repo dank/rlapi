@@ -110,6 +110,41 @@ func (p *PsyNet) Close() error {
 	return nil
 }
 
+func (p *PsyNet) parseMessage(message string) (*PsyResponse, error) {
+	delimiter := "\r\n\r\n"
+	index := strings.Index(message, delimiter)
+	if index == -1 {
+		return nil, fmt.Errorf("message does not contain expected delimiter")
+	}
+
+	headersPart := message[:index]
+	jsonPayload := message[index+len(delimiter):]
+
+	headers := make(map[string]string)
+	headerLines := strings.Split(headersPart, "\r\n")
+	for _, line := range headerLines {
+		if colonIndex := strings.Index(line, ":"); colonIndex != -1 {
+			key := strings.TrimSpace(line[:colonIndex])
+			value := strings.TrimSpace(line[colonIndex+1:])
+			headers[key] = value
+		}
+	}
+
+	responseID := headers["PsyResponseID"]
+
+	var jsonResult json.RawMessage
+	if err := json.Unmarshal([]byte(jsonPayload), &jsonResult); err != nil {
+		return nil, fmt.Errorf("failed to parse JSON payload: %w", err)
+	}
+
+	response := &PsyResponse{
+		ResponseID: responseID,
+		Result:     jsonResult,
+	}
+
+	return response, nil
+}
+
 func (p *PsyNet) pingHandler() {
 	ticker := time.NewTicker(pingInterval)
 	defer ticker.Stop()
@@ -117,13 +152,13 @@ func (p *PsyNet) pingHandler() {
 	for range ticker.C {
 		p.mu.Lock()
 		if p.wsConn != nil {
-			if err := p.wsConn.WriteMessage(websocket.TextMessage, []byte("PsyPing: \n\n")); err != nil {
-				p.logger.Error("failed to send websocket ping", slog.Any("err", err))
+			if err := p.wsConn.WriteMessage(websocket.TextMessage, []byte("PsyPing: \r\n\r\n")); err != nil {
+				p.logger.Error("failed to send psynet ping", slog.Any("err", err))
 				p.mu.Unlock()
 				return
 			}
 
-			p.logger.Debug("sent websocket ping")
+			p.logger.Debug("sent psynet ping")
 		}
 		p.mu.Unlock()
 	}
@@ -141,25 +176,27 @@ func (p *PsyNet) readMessages() {
 			break
 		}
 
+		if strings.HasPrefix(string(message), "PsyPong:") {
+			p.logger.Debug("received psynet pong")
+			continue
+		}
+
 		p.logger.Debug("received websocket response", slog.String("message", string(message)))
 
-		if strings.HasPrefix(string(message), "PsyPong:") {
-			p.logger.Debug("received websocket pong")
+		response, err := p.parseMessage(string(message))
+		if err != nil {
+			p.logger.Error("failed to parse psynet message", slog.Any("err", err), slog.String("message", string(message)))
 			continue
 		}
 
-		var response PsyResponse
-		if err := json.Unmarshal(message, &response); err != nil {
-			p.logger.Warn("failed to unmarshal websocket message", slog.Any("err", err), slog.String("message", string(message)))
-			continue
-		}
+		if response.ResponseID != "" {
+			p.mu.Lock()
+			ch, exists := p.pendingReqs[response.ResponseID]
+			p.mu.Unlock()
 
-		p.mu.Lock()
-		ch, exists := p.pendingReqs[response.ResponseID]
-		p.mu.Unlock()
-
-		if exists {
-			ch <- &response
+			if exists {
+				ch <- response
+			}
 		}
 	}
 }
@@ -199,9 +236,9 @@ func (p *PsyNet) sendRequestAsync(ctx context.Context, service string, data inte
 
 	var message strings.Builder
 	for key, value := range headers {
-		message.WriteString(fmt.Sprintf("%s: %s\n", key, value))
+		message.WriteString(fmt.Sprintf("%s: %s\r\n", key, value))
 	}
-	message.WriteString("\n")
+	message.WriteString("\r\n")
 
 	message.Write(jsonData)
 

@@ -83,8 +83,8 @@ func (e *EGS) AuthenticateWithCode(authCode string) (*TokenResponse, error) {
 	})
 }
 
-// RefreshToken refreshes an EGS authentication token using a refresh token
-func (e *EGS) RefreshToken(refreshToken string) (*TokenResponse, error) {
+// AuthenticateWithRefreshToken authenticates with EGS using a refresh token
+func (e *EGS) AuthenticateWithRefreshToken(refreshToken string) (*TokenResponse, error) {
 	return e.requestToken(map[string]string{
 		"grant_type":    "refresh_token",
 		"refresh_token": refreshToken,
