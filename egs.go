@@ -111,7 +111,7 @@ func (e *EGS) requestToken(params map[string]string) (*TokenResponse, error) {
 
 	resp, err := e.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to make request: %w", err)
+		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -149,7 +149,7 @@ func (e *EGS) GetExchangeCode(accessToken string) (string, error) {
 
 	resp, err := e.client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("failed to get game token: %w", err)
+		return "", fmt.Errorf("failed to send request: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -159,7 +159,7 @@ func (e *EGS) GetExchangeCode(accessToken string) (string, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("failed to get game token: %s", string(body))
+		return "", fmt.Errorf("unexpected status code: %s", resp.Status)
 	}
 
 	var tokenResp struct {
@@ -207,7 +207,7 @@ func (e *EGS) requestEOSToken(params map[string]string) (*EOSTokenResponse, erro
 
 	resp, err := e.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to make request: %w", err)
+		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -217,7 +217,8 @@ func (e *EGS) requestEOSToken(params map[string]string) (*EOSTokenResponse, erro
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("EOS token request failed: %s", string(body))
+		return nil, fmt.Errorf("unexpected status code: %s", resp.Status)
+
 	}
 
 	var tokenResp EOSTokenResponse

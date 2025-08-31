@@ -1,9 +1,5 @@
 package rlapi
 
-import (
-	"context"
-)
-
 // Shop represents a shop in the game
 type Shop struct {
 	ID        int     `json:"ID"`
@@ -133,9 +129,9 @@ type GetShopNotificationsResponse struct {
 }
 
 // GetStandardShops gets the list of available shops
-func (p *PsyNet) GetStandardShops(ctx context.Context) (*GetStandardShopsResponse, error) {
+func (p *PsyNet) GetStandardShops() (*GetStandardShopsResponse, error) {
 	var result GetStandardShopsResponse
-	err := p.sendRequestSync(ctx, "Shops/GetStandardShops v1", map[string]interface{}{}, &result)
+	err := p.sendRequestSync(p.ctx, "Shops/GetStandardShops v1", map[string]interface{}{}, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -143,13 +139,13 @@ func (p *PsyNet) GetStandardShops(ctx context.Context) (*GetStandardShopsRespons
 }
 
 // GetShopCatalogue gets detailed shop items for the specified shop IDs
-func (p *PsyNet) GetShopCatalogue(ctx context.Context, shopIDs []int) (*GetShopCatalogueResponse, error) {
+func (p *PsyNet) GetShopCatalogue(shopIDs []int) (*GetShopCatalogueResponse, error) {
 	request := GetShopCatalogueRequest{
 		ShopIDs: shopIDs,
 	}
 
 	var result GetShopCatalogueResponse
-	err := p.sendRequestSync(ctx, "Shops/GetShopCatalogue v2", request, &result)
+	err := p.sendRequestSync(p.ctx, "Shops/GetShopCatalogue v2", request, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -157,9 +153,9 @@ func (p *PsyNet) GetShopCatalogue(ctx context.Context, shopIDs []int) (*GetShopC
 }
 
 // GetPlayerWallet gets the player's wallet information
-func (p *PsyNet) GetPlayerWallet(ctx context.Context) (*GetPlayerWalletResponse, error) {
+func (p *PsyNet) GetPlayerWallet() (*GetPlayerWalletResponse, error) {
 	var result GetPlayerWalletResponse
-	err := p.sendRequestSync(ctx, "Shops/GetPlayerWallet v1", GetPlayerWalletRequest{}, &result)
+	err := p.sendRequestSync(p.ctx, "Shops/GetPlayerWallet v1", GetPlayerWalletRequest{}, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -167,9 +163,9 @@ func (p *PsyNet) GetPlayerWallet(ctx context.Context) (*GetPlayerWalletResponse,
 }
 
 // GetShopNotifications gets shop notifications
-func (p *PsyNet) GetShopNotifications(ctx context.Context) (*GetShopNotificationsResponse, error) {
+func (p *PsyNet) GetShopNotifications() (*GetShopNotificationsResponse, error) {
 	var result GetShopNotificationsResponse
-	err := p.sendRequestSync(ctx, "Shops/GetShopNotifications v1", map[string]interface{}{}, &result)
+	err := p.sendRequestSync(p.ctx, "Shops/GetShopNotifications v1", map[string]interface{}{}, &result)
 	if err != nil {
 		return nil, err
 	}

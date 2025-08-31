@@ -92,7 +92,8 @@ func TestPsyNet_SendRequestSync(t *testing.T) {
 	defer mockServer.Close()
 
 	// Create PsyNet instance
-	psyNet := NewPsyNet()
+	ctx := context.Background()
+	psyNet := NewPsyNet(ctx)
 
 	// Connect to mock server
 	err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
@@ -130,7 +131,8 @@ func TestPsyNet_SendRequestAsync(t *testing.T) {
 	defer mockServer.Close()
 
 	// Create PsyNet instance
-	psyNet := NewPsyNet()
+	ctx := context.Background()
+	psyNet := NewPsyNet(ctx)
 
 	// Connect to mock server
 	err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
@@ -172,7 +174,8 @@ func TestPsyNet_ConcurrentRequests(t *testing.T) {
 	defer mockServer.Close()
 
 	// Create PsyNet instance
-	psyNet := NewPsyNet()
+	ctx := context.Background()
+	psyNet := NewPsyNet(ctx)
 
 	// Connect to mock server
 	err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
@@ -238,7 +241,8 @@ func TestPsyNet_FireAndForgetNoLeak(t *testing.T) {
 	defer mockServer.Close()
 
 	// Create PsyNet instance
-	psyNet := NewPsyNet()
+	ctx := context.Background()
+	psyNet := NewPsyNet(ctx)
 
 	// Connect to mock server
 	err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
@@ -292,7 +296,8 @@ func TestPsyNet_FireAndForgetNoLeak(t *testing.T) {
 }
 
 func TestPsyNet_RequestIDIncrementing(t *testing.T) {
-	psyNet := NewPsyNet()
+	ctx := context.Background()
+	psyNet := NewPsyNet(ctx)
 
 	// Test that requestID increments properly
 	id1 := psyNet.getRequestID()
@@ -316,7 +321,8 @@ func TestPsyNet_ConcurrentContextCancellation(t *testing.T) {
 	defer mockServer.Close()
 
 	// Create PsyNet instance
-	psyNet := NewPsyNet()
+	ctx := context.Background()
+	psyNet := NewPsyNet(ctx)
 
 	// Connect to mock server
 	err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
@@ -443,6 +449,58 @@ func TestParseMessage(t *testing.T) {
 		}
 		if msg.Message != "ok" {
 			t.Errorf("message = %q, want %q", msg.Message, "ok")
+		}
+	})
+}
+
+func TestPsyNet_BuildMessage(t *testing.T) {
+	ctx := context.Background()
+	psyNet := NewPsyNet(ctx)
+
+	t.Run("request with no body", func(t *testing.T) {
+		headers := map[string]string{"PsyPing": ""}
+		message, err := psyNet.buildMessage(headers, nil)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		expected := "PsyPing: \r\n\r\n"
+		if message != expected {
+			t.Errorf("message = %q, want %q", message, expected)
+		}
+	})
+
+	t.Run("request with body", func(t *testing.T) {
+		headers := map[string]string{
+			"PsyService":   "Shops/GetStandardShops",
+			"PsyRequestID": "PsyNetMessage_X_123",
+		}
+		requestData := map[string]interface{}{"test": "data"}
+
+		message, err := psyNet.buildMessage(headers, requestData)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		// Should contain all headers including auto-generated PsySig
+		if !strings.Contains(message, "PsyService: Shops/GetStandardShops\r\n") {
+			t.Error("missing PsyService header")
+		}
+		if !strings.Contains(message, "PsyRequestID: PsyNetMessage_X_123\r\n") {
+			t.Error("missing PsyRequestID header")
+		}
+		if !strings.Contains(message, "PsySig:") {
+			t.Error("missing PsySig header")
+		}
+
+		// Should contain JSON body
+		if !strings.Contains(message, `{"test":"data"}`) {
+			t.Error("missing JSON body")
+		}
+
+		// Should have proper structure with delimiter
+		if !strings.Contains(message, "\r\n\r\n") {
+			t.Error("missing header/body delimiter")
 		}
 	})
 }

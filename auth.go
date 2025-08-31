@@ -63,7 +63,7 @@ func (p *PsyNet) AuthPlayer(platform Platform, authToken string, accountID strin
 
 	err = p.establishSocket(res.PerConURLv2, res.PsyToken, res.SessionID)
 	if err != nil {
-		return fmt.Errorf("failed to establish ws: %w", err)
+		return fmt.Errorf("failed to establish websocket: %w", err)
 	}
 
 	return nil

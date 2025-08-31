@@ -44,6 +44,7 @@ type PsyNet struct {
 	pendingReqs map[string]chan *PsyResponse
 	mu          sync.Mutex
 	logger      *slog.Logger
+	ctx         context.Context
 }
 
 type PsyRequest struct {
@@ -59,12 +60,20 @@ type PsyResponse struct {
 	Error      *psyNetError    `json:"Error"`
 }
 
-func NewPsyNet() *PsyNet {
+func NewPsyNet(ctx context.Context) *PsyNet {
 	return &PsyNet{
 		client:      &http.Client{},
 		pendingReqs: make(map[string]chan *PsyResponse),
 		logger:      slog.Default(),
+		ctx:         ctx,
 	}
+}
+
+func (p *PsyNet) Close() error {
+	if p.wsConn != nil {
+		return p.wsConn.Close()
+	}
+	return nil
 }
 
 func (p *PsyNet) establishSocket(url string, psyToken string, sessionID string) error {
@@ -103,13 +112,6 @@ func (p *PsyNet) generatePsySig(body []byte) string {
 	return base64.StdEncoding.EncodeToString(h.Sum(nil))
 }
 
-func (p *PsyNet) Close() error {
-	if p.wsConn != nil {
-		return p.wsConn.Close()
-	}
-	return nil
-}
-
 func (p *PsyNet) parseMessage(message string) (*PsyResponse, error) {
 	delimiter := "\r\n\r\n"
 	index := strings.Index(message, delimiter)
@@ -134,12 +136,36 @@ func (p *PsyNet) parseMessage(message string) (*PsyResponse, error) {
 
 	var jsonResult PsyResponse
 	if err := json.Unmarshal([]byte(jsonPayload), &jsonResult); err != nil {
-		return nil, fmt.Errorf("failed to parse JSON payload: %w", err)
+		return nil, fmt.Errorf("failed to parse json payload: %w", err)
 	}
 
 	jsonResult.ResponseID = responseID
 
 	return &jsonResult, nil
+}
+
+func (p *PsyNet) buildMessage(headers map[string]string, body interface{}) (string, error) {
+	var message strings.Builder
+	var jsonData []byte
+
+	if body != nil {
+		var err error
+		jsonData, err = json.Marshal(body)
+		if err != nil {
+			return "", fmt.Errorf("failed to marshal body: %w", err)
+		}
+
+		headers["PsySig"] = p.generatePsySig(jsonData)
+	}
+
+	for key, value := range headers {
+		message.WriteString(fmt.Sprintf("%s: %s\r\n", key, value))
+	}
+
+	message.WriteString("\r\n")
+	message.Write(jsonData)
+
+	return message.String(), nil
 }
 
 func (p *PsyNet) pingHandler() {
@@ -149,7 +175,14 @@ func (p *PsyNet) pingHandler() {
 	for range ticker.C {
 		p.mu.Lock()
 		if p.wsConn != nil {
-			if err := p.wsConn.WriteMessage(websocket.TextMessage, []byte("PsyPing: \r\n\r\n")); err != nil {
+			pingMessage, err := p.buildMessage(map[string]string{"PsyPing": ""}, nil)
+			if err != nil {
+				p.logger.Error("failed to build ping message", slog.Any("err", err))
+				p.mu.Unlock()
+				return
+			}
+
+			if err := p.wsConn.WriteMessage(websocket.TextMessage, []byte(pingMessage)); err != nil {
 				p.logger.Error("failed to send psynet ping", slog.Any("err", err))
 				p.mu.Unlock()
 				return
@@ -220,29 +253,20 @@ func (p *PsyNet) sendRequestAsync(ctx context.Context, service string, data inte
 		close(respCh)
 	}()
 
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal request data: %w", err)
-	}
-
 	headers := map[string]string{
 		"PsyService":   service,
-		"PsySig":       p.generatePsySig(jsonData),
 		"PsyRequestID": requestID,
 	}
 
-	var message strings.Builder
-	for key, value := range headers {
-		message.WriteString(fmt.Sprintf("%s: %s\r\n", key, value))
+	message, err := p.buildMessage(headers, data)
+	if err != nil {
+		return nil, err
 	}
-	message.WriteString("\r\n")
 
-	message.Write(jsonData)
-
-	p.logger.Debug("sending websocket request", slog.String("requestID", requestID), slog.String("message", message.String()))
+	p.logger.Debug("sending websocket request", slog.String("requestID", requestID), slog.String("message", message))
 
 	p.mu.Lock()
-	err = p.wsConn.WriteMessage(websocket.TextMessage, []byte(message.String()))
+	err = p.wsConn.WriteMessage(websocket.TextMessage, []byte(message))
 	p.mu.Unlock()
 
 	if err != nil {
