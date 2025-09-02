@@ -1,15 +1,19 @@
-# rlapi
-Reverse engineered Rocket League internal HTTP & WebSocket API (with a partial Go wrapper).
+# _rlapi_
+![GitHub Release](https://img.shields.io/github/v/release/dank/rlapi)
+[![Go Reference](https://img.shields.io/static/v1?label=godoc&message=reference&color=blue)](https://pkg.go.dev/github.com/dank/rlapi)
+![GitHub License](https://img.shields.io/github/license/dank/rlapi)
 
-**THIS PROJECT IS PROVIDED AS-IS** and is a compilation of research and intercepted requests for Rocket League's internal APIs. While not all endpoints are fully documented or implemented, this repository contains all relevant resources and serves as a foundation for further exploration. Do not ask me about specific endpoints, I probably don’t know.
+### [ITEM SHOP DEMO](https://rl.guac.net)
 
-## Contributions
-All contributions are welcome! If you discover new endpoints, extend the Go wrapper, or add additional functionality, please submit a PR.
+_rlapi_ is a reverse-engineered collection of Rocket League's internal APIs with a Go SDK. It provides a full end-to-end flow, from authentication to accessing the item shop, player stats, inventory, match history, replays, and more. This repository also contains resources for reverse engineering and analyzing Rocket League network traffic, serving as a foundation for further exploration. Not all endpoints are fully documented—do not ask about specific ones, as I probably don't know.
+
+### Contributions
+All contributions are welcome! If you discover new endpoints, extend the Go SDK, or add additional functionality, please submit a PR.
 
 ## Getting Started
-See the godoc for detailed documentation on the Go wrapper. The rest of this README contains resources on reverse engineering and API endpoints.
+Refer to the [godoc](https://pkg.go.dev/github.com/dank/rlapi) for detailed documentation on the Go SDK.
 
-Comprehensive examples are available in the `examples` directory.
+Comprehensive examples are available in the [`examples`](examples) directory.
 
 ### Usage
 ```bash
@@ -19,50 +23,42 @@ go get github.com/dank/rlapi
 ### Authentication
 Rocket League authentication always goes through Epic Online Services (EOS), either via the Epic Games Store (EGS) or by exchanging a Steam session ticket for an EOS token.
 
-This library provides full end-to-end authentication via EGS. Steam login and ticket generation are out of scope, but a method is provided to exchange a Steam session ticket for an EOS token, and users can leverage external libraries such as [steam-user](https://github.com/DoctorMcKay/node-steam-user) or [SteamKit](https://partner.steamgames.com/doc/api/ISteamUser#GetAuthSessionTicket) to obtain the ticket.
+This library provides full end-to-end authentication via EGS. Steam login and ticket generation are out of scope, but a method is provided to exchange a Steam session ticket for an EOS token, and users can leverage external libraries such as [steam-user](https://github.com/DoctorMcKay/node-steam-user/wiki/Steam-App-Auth) or [Steamworks](https://partner.steamgames.com/doc/api/ISteamUser#GetAuthSessionTicket) to obtain the ticket.
 
 ## Intercepting Requests
+Traditional proxy tools like Fiddler don't work with Rocket League due to certificate pinning.
 
-Traditional proxy tools like Fiddler don’t work with Rocket League due to certificate pinning.
-
-To intercept traffic, we use Frida dynamic instrumentation to hook curl functions at runtime, disabling SSL verification and redirecting API calls from `api.rlpp.psynet.gg` to a local MITM server.
+To intercept traffic, we use Frida dynamic instrumentation to hook curl functions at runtime, disabling SSL verification and redirecting API traffic to a local MITM server.
 
 ### MITM Server
+The MITM proxy forwards both HTTP and WebSocket traffic to the official servers while intercepting and logging requests and responses. Authentication responses are rewritten so the WebSocket URL points to the local server.
 
-Even with certificate pinning disabled, Rocket League still requires HTTPS and WSS connections. To handle this, the MITM proxy uses self-signed certificates, acting as a forwarder proxy for both HTTP and WebSocket traffic.
-The authentication endpoint response is intercepted and rewritten so that the WebSocket URL returned by the server points to the local MITM WebSocket server.
-
-Optionally, the MITM server can be configured to route through a Fiddler proxy (`http://127.0.0.1:8888`) to intercept the traffic in a more familiar interface.
-
-See the respective READMEs in `tools/frida/` and `tools/mitm/` directories for usage instructions and setup details.
+> [!NOTE]
+> Refer to the respective READMEs in [`tools/frida/`](tools/frida) and [`tools/mitm/`](tools/mitm) directories for more details and usage instructions.
 
 ## Reconstructing Requests
-
 ### Authentication
-
 Rocket League initially establishes a connection with the HTTP API before transitioning to a WebSocket connection. The client sends an EOS access token via HTTP and receives session credentials, the WebSocket endpoint URL, and any tokens required for further communication. The client then connects to the WebSocket using these tokens, allowing all subsequent API calls to occur over a persistent WebSocket connection.
 
 ### Signing
-All API requests and responses must be signed using `PsySig` headers with HMAC-SHA256. The signing keys were reverse engineered from the game binary and are XOR-encrypted with a 4-byte pattern. For example, in Python:
+All API requests and responses must include a `PsySig` header containing a Base64-encoded HMAC-SHA256 signature. The signing keys were reverse-engineered from the game binary and are XOR'd with a 4-byte pattern. To decrypt:
 ```python
-# Raw data from IDA dump
+# Raw IDA dump
 data = [0x36, 0xEA, 0x37, 0x0C, ...]  # 36 bytes total
 
 key_bytes = [data[i] ^ data[(i % 4) + 32] for i in range(32)]
 ```
 
-- **Requests**: `c338bd36fb8c42b1a431d30add939fc7`
-  - Format: `HMAC-SHA256(key, "-" + request_body)`
-- **Responses**: `3b932153785842ac927744b292e40e52`  
-  - Format: `HMAC-SHA256(key, PsyTime + "-" + response_body)`
+- **Request Key**: `c338bd36fb8c42b1a431d30add939fc7`
+  - Format: `HMAC-SHA256(key, "-" + <request body>)`
+- **Response Key**: `3b932153785842ac927744b292e40e52`  
+  - Format: `HMAC-SHA256(key, PsyTime + "-" + <response body>)`
 
-All signatures are base64-encoded.
 
-### Schema
-
+### WebSocket Schema
 Rocket League WebSocket messages use a custom HTTP-like schema with headers and JSON body:
 
-```
+```json5
 PsyService: Matchmaking/StartMatchmaking v2
 PsyRequestID: PsyNetMessage_X_1
 PsyToken: authentication-token
@@ -76,7 +72,7 @@ PsyEnvironment: Prod
 ```
 
 **Required Headers:**
-- `PsyService`: API endpoint (e.g., `Matchmaking/StartMatchmaking v2`)
+- `PsyService`: Event name (e.g., `Matchmaking/StartMatchmaking v2`)
 - `PsyRequestID`: Idempotency key for request/response matching (`PsyNetMessage_X_`)
 - `PsyToken`: Authentication token
 - `PsySessionID`: Session identifier
@@ -88,60 +84,163 @@ PsyEnvironment: Prod
 The message format is: headers (each ending with `\r\n`) followed by `\r\n\r\n` separator, then JSON body.
 
 ## HTTP Endpoints
-### Auth/AuthPlayer/v2
-## WebSocket Endpoints
-### Challenges/FTECheckpointComplete v1
-### Challenges/FTEGroupComplete v1
-### Challenges/GetActiveChallenges v1
-### Challenges/PlayerProgress v1
-### Clubs/GetClubInvites v1
-### Clubs/GetClubTitleInstances v1
-### Clubs/GetPlayerClubDetails v2
-### Clubs/GetStats v1
-### Clubs/RejectClubInvite v1
-### Drop/GetTradeInFilters v1
-### Filters/FilterContent v1
-### GameServer/GetGameServerPingList v2
-### Matches/GetMatchHistory v1
-### Matchmaking/PlayerCancelMatchmaking v1
-### Matchmaking/StartMatchmaking v2
-### Metrics/RecordMetrics v1
-### Microtransaction/ClaimEntitlements v2
-### Microtransaction/GetCatalog v1
-### Microtransaction/StartPurchase v1
-### Party/CreateParty v1
-### Party/GetPlayerPartyInfo v1
-### Party/LeaveParty v1
-### Party/SendPartyMessage v1
-### Party/System
-### Players/GetBanStatus v3
-### Players/GetCreatorCode v1
-### Players/GetProfile v1
-### Players/GetXP v1
-### Playlists/GetActivePlaylists v1
-### Population/GetPopulation v1
-### Population/UpdatePlayerPlaylist v1
-### Products/CrossEntitlement/GetProductStatus v1
-### Products/GetContainerDropTable v2
-### Products/GetPlayerProducts v2
-### Products/TradeIn v2
-### Products/UnlockContainer v2
-### Regions/GetSubRegions v1
-### RocketPass/GetPlayerInfo v2
-### RocketPass/GetPlayerPrestigeRewards v1
-### RocketPass/GetRewardContent v1
-### Shops/GetPlayerWallet v1
-### Shops/GetShopCatalogue v2
-### Shops/GetShopNotifications v1
-### Shops/GetStandardShops v1
-### Skills/GetPlayerSkill v1
-### Skills/GetSkillLeaderboard v1
-### Skills/GetSkillLeaderboardRankForUsers v1
-### Skills/GetSkillLeaderboardValueForUser v1
-### Stats/GetStatLeaderboard v1
-### Stats/GetStatLeaderboardValueForUser v1
-### Tournaments/Search/GetSchedule v1
-### Tournaments/Status/GetCycleData v1
-### Tournaments/Status/GetScheduleRegion v1
-### Tournaments/Status/GetTournamentSubscriptions v1
-### Users/CanShowAvatar v1
+The HTTP API is used only for authentication and to bootstrap the WebSocket connection. Unlike before, there is no way to "downgrade" the WebSocket connection to HTTP (AFAIK).
+
+The base URL for HTTP requests is: `https://api.rlpp.psynet.gg/rpc/`.
+
+### POST Auth/AuthPlayer/v2
+
+> [!NOTE]
+> When the API refers to a "Player ID", it typically expects the following format:
+>  ```
+> <platform>|<platform-specific account ID>|0
+> ```
+> For example, on Steam: `Steam|76561197960287930|0`. The final 0 is always included, though its purpose is unknown.
+
+###### Request
+```json5
+PsyRequestID: PsyNetMessage_X_0 
+PsyBuildID: 151471783
+PsyEnvironment: Prod
+User-Agent: User-Agent: RL Win/250811.43331.492665 gzip (x86_64-pc-win32) curl-7.67.0 Schannel
+PsySig: <HMAC signature>
+Content-Type: application/x-www-form-urlencoded
+        
+{
+  "Platform": "<platform>",
+  "PlayerName": "<player name>",
+  "PlayerID": "<platform account ID>",
+  "Language": "INT",
+  "AuthTicket": "<EOS access token>",
+  "BuildRegion": "",
+  "FeatureSet": "PrimeUpdate55_1", // varies by build
+  "Device": "PC",
+  "LocalFirstPlayerID": "<player ID>",
+  "bSkipAuth": false,
+  "bSetAsPrimaryAccount": true,
+  "EpicAuthTicket": "<EOS auth ticket>",
+  "EpicAccountID": "<Epic account ID>"
+}
+```
+
+###### Response
+```json5
+{
+  "Result": {
+    "IsLastChanceAuthBan": false,
+    "VerifiedPlayerName": "<player name>",
+    "UseWebSocket": true, // forcing this to false doesn't do anything
+    "PerConURL": "wss://...", // unused / legacy?
+    "PerConURLv2": "wss://...", // url for ws connection
+    "PsyToken": "<auth token>", // used by subsequent ws requests
+    "SessionID": "<session id>", // used by subsequent ws requests
+    "CountryRestrictions": []
+  }
+}
+```
+
+## WebSocket Events
+> [!NOTE]
+> For detailed request/response schema definitions, refer to the [godoc](https://pkg.go.dev/github.com/dank/rlapi) documentation instead.
+
+The following is an incomplete list of WebSocket events, some events may be undocumented or partially understood.
+
+
+The WebSocket endpoint URL is returned by the authentication endpoint, it is currently: `wss://ws.rlpp.psynet.gg/ws/gc2`.
+
+### Challenges
+#### Challenges/FTECheckpointComplete v1
+#### Challenges/FTEGroupComplete v1
+#### Challenges/GetActiveChallenges v1
+#### Challenges/PlayerProgress v1
+
+### Clubs
+#### Clubs/GetClubInvites v1
+#### Clubs/GetClubTitleInstances v1
+#### Clubs/GetPlayerClubDetails v2
+#### Clubs/GetStats v1
+#### Clubs/RejectClubInvite v1
+
+### Drop
+#### Drop/GetTradeInFilters v1
+
+### Filters
+#### Filters/FilterContent v1
+
+### GameServer
+#### GameServer/GetGameServerPingList v2
+
+### Matches
+#### Matches/GetMatchHistory v1
+
+### Matchmaking
+#### Matchmaking/PlayerCancelMatchmaking v1
+#### Matchmaking/StartMatchmaking v2
+
+### Metrics
+#### Metrics/RecordMetrics v1
+
+### Microtransaction
+#### Microtransaction/ClaimEntitlements v2
+#### Microtransaction/GetCatalog v1
+#### Microtransaction/StartPurchase v1
+
+### Party
+#### Party/CreateParty v1
+#### Party/GetPlayerPartyInfo v1
+#### Party/LeaveParty v1
+#### Party/SendPartyMessage v1
+#### Party/System
+
+### Players
+#### Players/GetBanStatus v3
+#### Players/GetCreatorCode v1
+#### Players/GetProfile v1
+#### Players/GetXP v1
+
+### Playlists
+#### Playlists/GetActivePlaylists v1
+
+### Population
+#### Population/GetPopulation v1
+#### Population/UpdatePlayerPlaylist v1
+
+### Products
+#### Products/CrossEntitlement/GetProductStatus v1
+#### Products/GetContainerDropTable v2
+#### Products/GetPlayerProducts v2
+#### Products/TradeIn v2
+#### Products/UnlockContainer v2
+
+### Regions
+#### Regions/GetSubRegions v1
+
+### Rocket Pass
+#### RocketPass/GetPlayerInfo v2
+#### RocketPass/GetPlayerPrestigeRewards v1
+#### RocketPass/GetRewardContent v1
+
+### Shops
+#### Shops/GetPlayerWallet v1
+#### Shops/GetShopCatalogue v2
+#### Shops/GetShopNotifications v1
+#### Shops/GetStandardShops v1
+
+### Skills
+#### Skills/GetPlayerSkill v1
+#### Skills/GetSkillLeaderboard v1
+#### Skills/GetSkillLeaderboardRankForUsers v1
+#### Skills/GetSkillLeaderboardValueForUser v1
+
+### Stats
+#### Stats/GetStatLeaderboard v1
+#### Stats/GetStatLeaderboardValueForUser v1
+
+### Tournaments
+#### Tournaments/Search/GetSchedule v1
+#### Tournaments/Status/GetCycleData v1
+#### Tournaments/Status/GetScheduleRegion v1
+#### Tournaments/Status/GetTournamentSubscriptions v1
+
+### Users
+#### Users/CanShowAvatar v1

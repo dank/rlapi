@@ -1,26 +1,26 @@
 # RL Frida
 
-Frida dynamic instrumentation to bypass certificate pinning and redirect Rocket League API traffic to a local MITM server.
+Frida hooks for bypassing certificate pinning and redirecting Rocket League API traffic to a local MITM server.
 
-## Overview
-### Hook `curl_easy_init`
-Disables SSL verification by setting:
-- `CURLOPT_SSL_VERIFYPEER=0` - Disables peer certificate verification
-- `CURLOPT_SSL_VERIFYHOST=0` - Disables hostname verification
+## How it works
+### 1. Hook libcurl [`curl_easy_init`](https://curl.se/libcurl/c/curl_easy_init.html)
+Disable SSL verification by overriding the following options:
+- `CURLOPT_SSL_VERIFYPEER` - Disable peer certificate verification
+- `CURLOPT_SSL_VERIFYHOST` - Disable hostname verification
 
-This allows the game to accept the self-signed certificate from the local MITM server without validation errors.
+This allows the game to accept a self-signed certificate from the local MITM server without errors.
 
-### Hook `curl_easy_setopt`
-Intercepts URL setting calls and redirects API traffic:
-- Detects when `CURLOPT_URL` is set to `https://api.rlpp.psynet.gg`
-- Replaces the URL with `https://127.0.0.1` while preserving the path
-- Forces all HTTP API calls to route through the local MITM proxy
+### 2. Hook libcurl [`curl_easy_setopt`](https://curl.se/libcurl/c/curl_easy_setopt.html)
+Intercept URL calls to redirect API traffic:
+- Detect when `CURLOPT_URL` is set to `https://api.rlpp.psynet.gg`
+- Replace the URL with `https://127.0.0.1` while preserving the path
+- Force all HTTP API calls to route through the local MITM proxy
 
-### Hook `X509_verify_cert`
-Bypasses certificate validation for WebSocket connections:
-- Replaces the certificate verification function to always return success (1)
+### 3. Hook OpenSSL [`X509_verify_cert`](https://docs.openssl.org/1.1.1/man3/X509_verify_cert/)
+Bypass certificate validation for WebSocket connections:
+- Replace the certificate verification function to always return success (1)
 - Essential for WebSocket connections which use a separate validation path
-- Prevents SSL handshake failures when connecting to the local proxy
+- Prevent SSL handshake failures when connecting to the local proxy
 
 ## Prerequisites
 - Python 3.x
@@ -28,6 +28,10 @@ Bypasses certificate validation for WebSocket connections:
 - Node.js
 
 ## Usage
+
+> [!NOTE]
+> Steam and Epic builds have different offsets for each function. You may need to adjust them, check the code for details.
+
 1. Build the TypeScript Frida script:
 ```bash
 npm install

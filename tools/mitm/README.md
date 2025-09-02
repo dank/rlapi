@@ -1,13 +1,12 @@
 # RL MITM
 
-HTTPS/WebSocket man-in-the-middle proxy server for intercepting Rocket League API traffic. Acts as a local proxy that forwards requests to the actual Rocket League servers while logging and modifying traffic as needed.
+A local man-in-the-middle (MITM) proxy for intercepting Rocket League traffic. It forwards requests to the official servers while logging and modifying traffic as needed. Even with certificate pinning disabled, the game requires HTTPS and WSS connections; this tool handles them using self-signed certificates.
 
-## Overview
-
-This tool provides:
-- HTTPS and WSS proxy server with self-signed certificates
-- Authentication response modification to redirect WebSocket connections to local proxy
-- Proper HMAC-SHA256 signature verification and re-signing
+**Features:**
+- Intercepts authentication requests to rewrite responses and redirect WebSocket connections through a local proxy.
+- Logs all requests and responses and forwards them while acting as a seamless proxy.
+- Properly re-signs HMAC-SHA256 signatures for modified responses.
+- Optionally routes traffic through a Fiddler proxy (http://127.0.0.1:8888) to intercept and inspect it in a familiar interface.
 
 ## Usage
 
