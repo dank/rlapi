@@ -62,7 +62,7 @@ type ClubTitleInstance struct {
 
 // Request and Response types
 
-type GetClubDetailsRequest struct {
+type getClubDetailsRequest struct {
 	ClubID int64 `json:"ClubID"`
 }
 
@@ -70,7 +70,7 @@ type GetClubDetailsResponse struct {
 	ClubDetails ClubDetails `json:"ClubDetails"`
 }
 
-type GetPlayerClubDetailsRequest struct {
+type getPlayerClubDetailsRequest struct {
 	PlayerID PlayerID `json:"PlayerID"`
 }
 
@@ -82,7 +82,7 @@ type GetClubInvitesResponse struct {
 	ClubInvites []ClubInvite `json:"ClubInvites"`
 }
 
-type CreateClubRequest struct {
+type createClubRequest struct {
 	ClubName     string `json:"ClubName"`
 	ClubTag      string `json:"ClubTag"`
 	PrimaryColor int    `json:"PrimaryColor"`
@@ -108,7 +108,7 @@ type UpdateClubResponse struct {
 	ClubDetails ClubDetails `json:"ClubDetails"`
 }
 
-type InviteToClubRequest struct {
+type inviteToClubRequest struct {
 	ClubID   int64    `json:"ClubID"`
 	PlayerID PlayerID `json:"PlayerID"`
 }
@@ -117,7 +117,7 @@ type InviteToClubResponse struct {
 	Success bool `json:"Success"`
 }
 
-type AcceptClubInviteRequest struct {
+type acceptClubInviteRequest struct {
 	ClubID int64 `json:"ClubID"`
 }
 
@@ -126,7 +126,7 @@ type AcceptClubInviteResponse struct {
 	ClubDetails ClubDetails `json:"ClubDetails"`
 }
 
-type LeaveClubRequest struct {
+type leaveClubRequest struct {
 	ClubID int64 `json:"ClubID"`
 }
 
@@ -134,7 +134,7 @@ type LeaveClubResponse struct {
 	Success bool `json:"Success"`
 }
 
-type GetStatsRequest struct {
+type getStatsRequest struct {
 	ClubID int64 `json:"ClubID"`
 }
 
@@ -142,7 +142,7 @@ type GetStatsResponse struct {
 	Stats ClubStats `json:"Stats"`
 }
 
-type GetClubTitleInstancesRequest struct {
+type getClubTitleInstancesRequest struct {
 	ClubID int64 `json:"ClubID"`
 }
 
@@ -152,7 +152,7 @@ type GetClubTitleInstancesResponse struct {
 
 // GetClubDetails retrieves detailed information about a specific club.
 func (p *PsyNetRPC) GetClubDetails(ctx context.Context, clubID int64) (*GetClubDetailsResponse, error) {
-	request := GetClubDetailsRequest{
+	request := getClubDetailsRequest{
 		ClubID: clubID,
 	}
 
@@ -166,7 +166,7 @@ func (p *PsyNetRPC) GetClubDetails(ctx context.Context, clubID int64) (*GetClubD
 
 // GetPlayerClubDetails retrieves club details for a specific player.
 func (p *PsyNetRPC) GetPlayerClubDetails(ctx context.Context, playerID PlayerID) (*GetPlayerClubDetailsResponse, error) {
-	request := GetPlayerClubDetailsRequest{
+	request := getPlayerClubDetailsRequest{
 		PlayerID: playerID,
 	}
 
@@ -190,7 +190,7 @@ func (p *PsyNetRPC) GetClubInvites(ctx context.Context) (*GetClubInvitesResponse
 
 // CreateClub creates a new club with the specified details.
 func (p *PsyNetRPC) CreateClub(ctx context.Context, clubName, clubTag string, primaryColor, accentColor int) (*CreateClubResponse, error) {
-	request := CreateClubRequest{
+	request := createClubRequest{
 		ClubName:     clubName,
 		ClubTag:      clubTag,
 		PrimaryColor: primaryColor,
@@ -217,7 +217,7 @@ func (p *PsyNetRPC) UpdateClub(ctx context.Context, request UpdateClubRequest) (
 
 // InviteToClub invites a player to join a club.
 func (p *PsyNetRPC) InviteToClub(ctx context.Context, clubID int64, playerID PlayerID) (*InviteToClubResponse, error) {
-	request := InviteToClubRequest{
+	request := inviteToClubRequest{
 		ClubID:   clubID,
 		PlayerID: playerID,
 	}
@@ -232,7 +232,7 @@ func (p *PsyNetRPC) InviteToClub(ctx context.Context, clubID int64, playerID Pla
 
 // AcceptClubInvite accepts an invitation to join a club.
 func (p *PsyNetRPC) AcceptClubInvite(ctx context.Context, clubID int64) (*AcceptClubInviteResponse, error) {
-	request := AcceptClubInviteRequest{
+	request := acceptClubInviteRequest{
 		ClubID: clubID,
 	}
 
@@ -246,7 +246,7 @@ func (p *PsyNetRPC) AcceptClubInvite(ctx context.Context, clubID int64) (*Accept
 
 // LeaveClub leaves a club.
 func (p *PsyNetRPC) LeaveClub(ctx context.Context, clubID int64) (*LeaveClubResponse, error) {
-	request := LeaveClubRequest{
+	request := leaveClubRequest{
 		ClubID: clubID,
 	}
 
@@ -260,7 +260,7 @@ func (p *PsyNetRPC) LeaveClub(ctx context.Context, clubID int64) (*LeaveClubResp
 
 // GetClubStats retrieves statistics for a club.
 func (p *PsyNetRPC) GetClubStats(ctx context.Context, clubID int64) (*GetStatsResponse, error) {
-	request := GetStatsRequest{
+	request := getStatsRequest{
 		ClubID: clubID,
 	}
 
@@ -274,7 +274,7 @@ func (p *PsyNetRPC) GetClubStats(ctx context.Context, clubID int64) (*GetStatsRe
 
 // GetClubTitleInstances retrieves title instances for a club.
 func (p *PsyNetRPC) GetClubTitleInstances(ctx context.Context, clubID int64) (*GetClubTitleInstancesResponse, error) {
-	request := GetClubTitleInstancesRequest{
+	request := getClubTitleInstancesRequest{
 		ClubID: clubID,
 	}
 

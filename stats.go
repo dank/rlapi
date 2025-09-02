@@ -32,7 +32,7 @@ type StatLeaderboardRankPlayer struct {
 
 // Request and Response types
 
-type GetStatLeaderboardRequest struct {
+type getStatLeaderboardRequest struct {
 	StatName          string `json:"StatName"`
 	BDisableCrossplay bool   `json:"bDisableCrossplay"`
 }
@@ -42,7 +42,7 @@ type GetStatLeaderboardResponse struct {
 	Platforms     []StatPlatformLeaderboard `json:"Platforms"`
 }
 
-type GetStatLeaderboardValueForUserRequest struct {
+type getStatLeaderboardValueForUserRequest struct {
 	StatName string   `json:"StatName"`
 	PlayerID PlayerID `json:"PlayerID"`
 }
@@ -54,7 +54,7 @@ type GetStatLeaderboardValueForUserResponse struct {
 	Rank          int     `json:"Rank"`
 }
 
-type GetStatLeaderboardRankForUsersRequest struct {
+type getStatLeaderboardRankForUsersRequest struct {
 	StatName  string     `json:"StatName"`
 	PlayerIDs []PlayerID `json:"PlayerIDs"`
 }
@@ -66,7 +66,7 @@ type GetStatLeaderboardRankForUsersResponse struct {
 
 // GetStatLeaderboard retrieves the statistical leaderboard for a specific stat.
 func (p *PsyNetRPC) GetStatLeaderboard(ctx context.Context, statName string, disableCrossplay bool) (*GetStatLeaderboardResponse, error) {
-	request := GetStatLeaderboardRequest{
+	request := getStatLeaderboardRequest{
 		StatName:          statName,
 		BDisableCrossplay: disableCrossplay,
 	}
@@ -81,7 +81,7 @@ func (p *PsyNetRPC) GetStatLeaderboard(ctx context.Context, statName string, dis
 
 // GetStatLeaderboardValueForUser retrieves a specific player's position and data on a stat leaderboard.
 func (p *PsyNetRPC) GetStatLeaderboardValueForUser(ctx context.Context, statName string, playerID PlayerID) (*GetStatLeaderboardValueForUserResponse, error) {
-	request := GetStatLeaderboardValueForUserRequest{
+	request := getStatLeaderboardValueForUserRequest{
 		StatName: statName,
 		PlayerID: playerID,
 	}
@@ -96,7 +96,7 @@ func (p *PsyNetRPC) GetStatLeaderboardValueForUser(ctx context.Context, statName
 
 // GetStatLeaderboardRankForUsers retrieves rank information for multiple players on a stat leaderboard.
 func (p *PsyNetRPC) GetStatLeaderboardRankForUsers(ctx context.Context, statName string, playerIDs []PlayerID) (*GetStatLeaderboardRankForUsersResponse, error) {
-	request := GetStatLeaderboardRankForUsersRequest{
+	request := getStatLeaderboardRankForUsersRequest{
 		StatName:  statName,
 		PlayerIDs: playerIDs,
 	}

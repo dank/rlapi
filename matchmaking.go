@@ -26,7 +26,7 @@ type MatchmakingResult struct {
 
 // Request and Response types
 
-type StartMatchmakingRequest struct {
+type startMatchmakingRequest struct {
 	Playlists         []int  `json:"Playlists"`
 	Region            string `json:"Region"`
 	PartyID           string `json:"PartyID"`
@@ -39,7 +39,7 @@ type StartMatchmakingResponse struct {
 	EstimatedWaitTime int    `json:"EstimatedWaitTime"`
 }
 
-type PlayerCancelMatchmakingRequest struct {
+type playerCancelMatchmakingRequest struct {
 	PlayerID PlayerID `json:"PlayerID"`
 }
 
@@ -47,7 +47,7 @@ type PlayerCancelMatchmakingResponse struct {
 	Success bool `json:"Success"`
 }
 
-type PlayerSearchPrivateMatchRequest struct {
+type playerSearchPrivateMatchRequest struct {
 	Name     string `json:"Name"`
 	Password string `json:"Password"`
 	Region   string `json:"Region"`
@@ -68,7 +68,7 @@ type PrivateMatch struct {
 
 // StartMatchmaking starts matchmaking for specified playlists.
 func (p *PsyNetRPC) StartMatchmaking(ctx context.Context, playlists []int, region, partyID string, disableCrossplay bool) (*StartMatchmakingResponse, error) {
-	request := StartMatchmakingRequest{
+	request := startMatchmakingRequest{
 		Playlists:         playlists,
 		Region:            region,
 		PartyID:           partyID,
@@ -85,7 +85,7 @@ func (p *PsyNetRPC) StartMatchmaking(ctx context.Context, playlists []int, regio
 
 // PlayerCancelMatchmaking cancels ongoing matchmaking for a player.
 func (p *PsyNetRPC) PlayerCancelMatchmaking(ctx context.Context, playerID PlayerID) (*PlayerCancelMatchmakingResponse, error) {
-	request := PlayerCancelMatchmakingRequest{
+	request := playerCancelMatchmakingRequest{
 		PlayerID: playerID,
 	}
 
@@ -99,7 +99,7 @@ func (p *PsyNetRPC) PlayerCancelMatchmaking(ctx context.Context, playerID Player
 
 // PlayerSearchPrivateMatch searches for private matches.
 func (p *PsyNetRPC) PlayerSearchPrivateMatch(ctx context.Context, name, password, region string) (*PlayerSearchPrivateMatchResponse, error) {
-	request := PlayerSearchPrivateMatchRequest{
+	request := playerSearchPrivateMatchRequest{
 		Name:     name,
 		Password: password,
 		Region:   region,

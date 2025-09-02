@@ -18,7 +18,7 @@ type authPlayerRequest struct {
 	EpicAccountID       string `json:"EpicAccountID"`
 }
 
-type authPlayerResponse struct {
+type AuthPlayerResponse struct {
 	IsLastChanceAuthBan bool     `json:"IsLastChanceAuthBan"`
 	SessionID           string   `json:"SessionID"`
 	VerifiedPlayerName  string   `json:"VerifiedPlayerName"`
@@ -48,7 +48,7 @@ func (p *PsyNet) AuthPlayer(platform Platform, authToken string, accountID strin
 		EpicAccountID:       accountID,
 	}
 
-	var res authPlayerResponse
+	var res AuthPlayerResponse
 	err := p.postJSON([]string{"Auth", "AuthPlayer", "v2"}, req, &res)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authenticate player: %w", err)

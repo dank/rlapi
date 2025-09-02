@@ -2,9 +2,11 @@ package rlapi
 
 import "context"
 
+type ShopID int
+
 // Shop represents a shop in the game
 type Shop struct {
-	ID        int     `json:"ID"`
+	ID        ShopID  `json:"ID"`
 	Type      string  `json:"Type"`
 	StartDate int64   `json:"StartDate"`
 	EndDate   *int64  `json:"EndDate"`
@@ -15,7 +17,7 @@ type Shop struct {
 
 // ShopCatalogue represents the catalogue for a specific shop
 type ShopCatalogue struct {
-	ShopID    int        `json:"ShopID"`
+	ShopID    ShopID     `json:"ShopID"`
 	ShopItems []ShopItem `json:"ShopItems"`
 }
 
@@ -95,15 +97,15 @@ type GetStandardShopsResponse struct {
 	Shops []Shop `json:"Shops"`
 }
 
-type GetShopCatalogueRequest struct {
-	ShopIDs []int `json:"ShopIDs"`
+type getShopCatalogueRequest struct {
+	ShopIDs []ShopID `json:"ShopIDs"`
 }
 
 type GetShopCatalogueResponse struct {
 	Catalogues []ShopCatalogue `json:"Catalogues"`
 }
 
-type GetPlayerWalletRequest struct {
+type getPlayerWalletRequest struct {
 	PlayerID PlayerID `json:"PlayerID"`
 }
 
@@ -141,8 +143,8 @@ func (p *PsyNetRPC) GetStandardShops(ctx context.Context) (*GetStandardShopsResp
 }
 
 // GetShopCatalogue retrieves detailed information about items available in specific shops.
-func (p *PsyNetRPC) GetShopCatalogue(ctx context.Context, shopIDs []int) (*GetShopCatalogueResponse, error) {
-	request := GetShopCatalogueRequest{
+func (p *PsyNetRPC) GetShopCatalogue(ctx context.Context, shopIDs []ShopID) (*GetShopCatalogueResponse, error) {
+	request := getShopCatalogueRequest{
 		ShopIDs: shopIDs,
 	}
 
@@ -155,9 +157,9 @@ func (p *PsyNetRPC) GetShopCatalogue(ctx context.Context, shopIDs []int) (*GetSh
 }
 
 // GetPlayerWallet retrieves the authenticated player's wallet information.
-func (p *PsyNetRPC) GetPlayerWallet(ctx context.Context) (*GetPlayerWalletResponse, error) {
+func (p *PsyNetRPC) GetPlayerWallet(ctx context.Context, playerID PlayerID) (*GetPlayerWalletResponse, error) {
 	var result GetPlayerWalletResponse
-	err := p.sendRequestSync(ctx, "Shops/GetPlayerWallet v1", GetPlayerWalletRequest{}, &result)
+	err := p.sendRequestSync(ctx, "Shops/GetPlayerWallet v1", getPlayerWalletRequest{PlayerID: playerID}, &result)
 	if err != nil {
 		return nil, err
 	}

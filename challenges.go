@@ -1,6 +1,9 @@
 package rlapi
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
 
 // Challenge represents a game challenge
 type Challenge struct {
@@ -76,7 +79,7 @@ type ChallengeRequirementState struct {
 
 // Request and Response types
 
-type GetActiveChallengesRequest struct {
+type getActiveChallengesRequest struct {
 	Challenges []interface{} `json:"Challenges"`
 	Folders    []interface{} `json:"Folders"`
 }
@@ -85,7 +88,7 @@ type GetActiveChallengesResponse struct {
 	Challenges []Challenge `json:"Challenges"`
 }
 
-type PlayerProgressRequest struct {
+type playerProgressRequest struct {
 	PlayerID PlayerID `json:"PlayerID"`
 }
 
@@ -93,7 +96,7 @@ type PlayerProgressResponse struct {
 	PlayerProgress PlayerProgress `json:"PlayerProgress"`
 }
 
-type CollectRewardRequest struct {
+type collectRewardRequest struct {
 	PlayerID    PlayerID `json:"PlayerID"`
 	ChallengeID int      `json:"ChallengeID"`
 }
@@ -103,7 +106,7 @@ type CollectRewardResponse struct {
 	UpdatedProgress  PlayerProgress   `json:"UpdatedProgress"`
 }
 
-type FTECheckpointCompleteRequest struct {
+type fteCheckpointCompleteRequest struct {
 	PlayerID     PlayerID `json:"PlayerID"`
 	CheckpointID int      `json:"CheckpointID"`
 }
@@ -112,7 +115,7 @@ type FTECheckpointCompleteResponse struct {
 	Success bool `json:"Success"`
 }
 
-type FTEGroupCompleteRequest struct {
+type fteGroupCompleteRequest struct {
 	PlayerID PlayerID `json:"PlayerID"`
 	GroupID  int      `json:"GroupID"`
 }
@@ -122,8 +125,8 @@ type FTEGroupCompleteResponse struct {
 }
 
 // GetActiveChallenges retrieves the list of currently active challenges.
-func (p *PsyNetRPC) GetActiveChallenges(ctx context.Context) (*GetActiveChallengesResponse, error) {
-	request := GetActiveChallengesRequest{
+func (p *PsyNetRPC) GetActiveChallenges(ctx context.Context) ([]Challenge, error) {
+	request := getActiveChallengesRequest{
 		Challenges: []interface{}{},
 		Folders:    []interface{}{},
 	}
@@ -133,12 +136,12 @@ func (p *PsyNetRPC) GetActiveChallenges(ctx context.Context) (*GetActiveChalleng
 	if err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return result.Challenges, nil
 }
 
 // PlayerProgress retrieves a player's progress on challenges.
-func (p *PsyNetRPC) PlayerProgress(ctx context.Context, playerID PlayerID) (*PlayerProgressResponse, error) {
-	request := PlayerProgressRequest{
+func (p *PsyNetRPC) PlayerProgress(ctx context.Context, playerID PlayerID) (*PlayerProgress, error) {
+	request := playerProgressRequest{
 		PlayerID: playerID,
 	}
 
@@ -147,12 +150,18 @@ func (p *PsyNetRPC) PlayerProgress(ctx context.Context, playerID PlayerID) (*Pla
 	if err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return &result.PlayerProgress, nil
+}
+
+// CollectRewardResult represents the result of collecting a reward
+type CollectRewardResult struct {
+	CollectedRewards ChallengeRewards `json:"CollectedRewards"`
+	UpdatedProgress  PlayerProgress   `json:"UpdatedProgress"`
 }
 
 // CollectReward collects rewards from a completed challenge.
-func (p *PsyNetRPC) CollectReward(ctx context.Context, playerID PlayerID, challengeID int) (*CollectRewardResponse, error) {
-	request := CollectRewardRequest{
+func (p *PsyNetRPC) CollectReward(ctx context.Context, playerID PlayerID, challengeID int) (*CollectRewardResult, error) {
+	request := collectRewardRequest{
 		PlayerID:    playerID,
 		ChallengeID: challengeID,
 	}
@@ -162,12 +171,15 @@ func (p *PsyNetRPC) CollectReward(ctx context.Context, playerID PlayerID, challe
 	if err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return &CollectRewardResult{
+		CollectedRewards: result.CollectedRewards,
+		UpdatedProgress:  result.UpdatedProgress,
+	}, nil
 }
 
 // FTECheckpointComplete marks a First Time Experience (FTE) checkpoint as complete.
-func (p *PsyNetRPC) FTECheckpointComplete(ctx context.Context, playerID PlayerID, checkpointID int) (*FTECheckpointCompleteResponse, error) {
-	request := FTECheckpointCompleteRequest{
+func (p *PsyNetRPC) FTECheckpointComplete(ctx context.Context, playerID PlayerID, checkpointID int) error {
+	request := fteCheckpointCompleteRequest{
 		PlayerID:     playerID,
 		CheckpointID: checkpointID,
 	}
@@ -175,14 +187,17 @@ func (p *PsyNetRPC) FTECheckpointComplete(ctx context.Context, playerID PlayerID
 	var result FTECheckpointCompleteResponse
 	err := p.sendRequestSync(ctx, "Challenges/FTECheckpointComplete v1", request, &result)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return &result, nil
+	if !result.Success {
+		return fmt.Errorf("failed to complete FTE checkpoint %d", checkpointID)
+	}
+	return nil
 }
 
 // FTEGroupComplete marks a First Time Experience (FTE) group as complete.
-func (p *PsyNetRPC) FTEGroupComplete(ctx context.Context, playerID PlayerID, groupID int) (*FTEGroupCompleteResponse, error) {
-	request := FTEGroupCompleteRequest{
+func (p *PsyNetRPC) FTEGroupComplete(ctx context.Context, playerID PlayerID, groupID int) error {
+	request := fteGroupCompleteRequest{
 		PlayerID: playerID,
 		GroupID:  groupID,
 	}
@@ -190,7 +205,10 @@ func (p *PsyNetRPC) FTEGroupComplete(ctx context.Context, playerID PlayerID, gro
 	var result FTEGroupCompleteResponse
 	err := p.sendRequestSync(ctx, "Challenges/FTEGroupComplete v1", request, &result)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return &result, nil
+	if !result.Success {
+		return fmt.Errorf("failed to complete FTE group %d", groupID)
+	}
+	return nil
 }

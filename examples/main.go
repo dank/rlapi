@@ -75,7 +75,7 @@ func main() {
 	fmt.Println(string(shopsJSON))
 	fmt.Println()
 
-	var shopIDs []int
+	var shopIDs []rlapi.ShopID
 	for _, shop := range shopsResp.Shops {
 		shopIDs = append(shopIDs, shop.ID)
 	}

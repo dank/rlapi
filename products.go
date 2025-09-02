@@ -55,7 +55,7 @@ type CrossEntitlementStatus struct {
 
 // Request and Response types
 
-type GetPlayerProductsRequest struct {
+type getPlayerProductsRequest struct {
 	PlayerID         PlayerID `json:"PlayerID"`
 	UpdatedTimestamp string   `json:"UpdatedTimestamp"`
 }
@@ -68,7 +68,7 @@ type GetContainerDropTableResponse struct {
 	DropTables []ContainerDropTable `json:"DropTables"`
 }
 
-type UnlockContainerRequest struct {
+type unlockContainerRequest struct {
 	PlayerID       PlayerID `json:"PlayerID"`
 	InstanceIDs    []string `json:"InstanceIDs"`
 	KeyInstanceIDs []string `json:"KeyInstanceIDs"`
@@ -78,7 +78,7 @@ type UnlockContainerResponse struct {
 	Results []UnlockResult `json:"Results"`
 }
 
-type TradeInRequest struct {
+type tradeInRequest struct {
 	PlayerID         PlayerID `json:"PlayerID"`
 	ProductInstances []string `json:"ProductInstances"`
 }
@@ -94,7 +94,7 @@ type GetProductStatusResponse struct {
 
 // GetPlayerProducts retrieves all products owned by a specific player.
 func (p *PsyNetRPC) GetPlayerProducts(ctx context.Context, playerID PlayerID, updatedTimestamp string) (*GetPlayerProductsResponse, error) {
-	request := GetPlayerProductsRequest{
+	request := getPlayerProductsRequest{
 		PlayerID:         playerID,
 		UpdatedTimestamp: updatedTimestamp,
 	}
@@ -119,7 +119,7 @@ func (p *PsyNetRPC) GetContainerDropTable(ctx context.Context) (*GetContainerDro
 
 // UnlockContainer unlocks containers using keys and returns the unlocked items.
 func (p *PsyNetRPC) UnlockContainer(ctx context.Context, playerID PlayerID, instanceIDs, keyInstanceIDs []string) (*UnlockContainerResponse, error) {
-	request := UnlockContainerRequest{
+	request := unlockContainerRequest{
 		PlayerID:       playerID,
 		InstanceIDs:    instanceIDs,
 		KeyInstanceIDs: keyInstanceIDs,
@@ -135,7 +135,7 @@ func (p *PsyNetRPC) UnlockContainer(ctx context.Context, playerID PlayerID, inst
 
 // TradeIn trades in multiple items for new items of higher rarity.
 func (p *PsyNetRPC) TradeIn(ctx context.Context, playerID PlayerID, productInstances []string) (*TradeInResponse, error) {
-	request := TradeInRequest{
+	request := tradeInRequest{
 		PlayerID:         playerID,
 		ProductInstances: productInstances,
 	}

@@ -48,7 +48,7 @@ type Purchase struct {
 
 // Request and Response types
 
-type GetCatalogRequest struct {
+type getCatalogRequest struct {
 	Category string `json:"Category,omitempty"`
 	Region   string `json:"Region,omitempty"`
 }
@@ -58,7 +58,7 @@ type GetCatalogResponse struct {
 	Timestamp int64         `json:"Timestamp"`
 }
 
-type StartPurchaseRequest struct {
+type startPurchaseRequest struct {
 	ItemID   string                 `json:"ItemID"`
 	Quantity int                    `json:"Quantity"`
 	Metadata map[string]interface{} `json:"Metadata,omitempty"`
@@ -71,7 +71,7 @@ type StartPurchaseResponse struct {
 	RedirectURL   string `json:"RedirectURL,omitempty"`
 }
 
-type ClaimEntitlementsRequest struct {
+type claimEntitlementsRequest struct {
 	PlayerID       PlayerID `json:"PlayerID"`
 	EntitlementIDs []string `json:"EntitlementIDs,omitempty"`
 }
@@ -83,7 +83,7 @@ type ClaimEntitlementsResponse struct {
 
 // GetCatalog retrieves the microtransaction catalog.
 func (p *PsyNetRPC) GetCatalog(ctx context.Context, category, region string) (*GetCatalogResponse, error) {
-	request := GetCatalogRequest{
+	request := getCatalogRequest{
 		Category: category,
 		Region:   region,
 	}
@@ -98,7 +98,7 @@ func (p *PsyNetRPC) GetCatalog(ctx context.Context, category, region string) (*G
 
 // StartPurchase initiates a microtransaction purchase.
 func (p *PsyNetRPC) StartPurchase(ctx context.Context, itemID string, quantity int, metadata map[string]interface{}) (*StartPurchaseResponse, error) {
-	request := StartPurchaseRequest{
+	request := startPurchaseRequest{
 		ItemID:   itemID,
 		Quantity: quantity,
 		Metadata: metadata,
@@ -114,7 +114,7 @@ func (p *PsyNetRPC) StartPurchase(ctx context.Context, itemID string, quantity i
 
 // ClaimEntitlements claims available entitlements for a player.
 func (p *PsyNetRPC) ClaimEntitlements(ctx context.Context, playerID PlayerID, entitlementIDs []string) (*ClaimEntitlementsResponse, error) {
-	request := ClaimEntitlementsRequest{
+	request := claimEntitlementsRequest{
 		PlayerID:       playerID,
 		EntitlementIDs: entitlementIDs,
 	}
