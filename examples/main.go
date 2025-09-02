@@ -50,18 +50,18 @@ func main() {
 
 	//refreshToken, err := egs.RefreshEOSToken(authToken.AuthenticateWithRefreshToken)
 
-	// Create context with timeout - user controls cancellation
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	psyNet := rlapi.NewPsyNet(ctx)
-	defer psyNet.Close()
-	err = psyNet.AuthPlayer(rlapi.Epic, authToken.AccessToken, auth.AccountID, auth.DisplayName)
+	psyNet := rlapi.NewPsyNet()
+	rpc, err := psyNet.AuthPlayer(rlapi.Epic, authToken.AccessToken, auth.AccountID, auth.DisplayName)
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer rpc.Close()
 
-	shopsResp, err := psyNet.GetStandardShops()
+	// Create context for API requests
+	apiCtx, apiCancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer apiCancel()
+
+	shopsResp, err := rpc.GetStandardShops(apiCtx)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -80,7 +80,7 @@ func main() {
 		shopIDs = append(shopIDs, shop.ID)
 	}
 
-	catalogResp, err := psyNet.GetShopCatalogue(shopIDs)
+	catalogResp, err := rpc.GetShopCatalogue(apiCtx, shopIDs)
 	if err != nil {
 		log.Fatal(err)
 	}

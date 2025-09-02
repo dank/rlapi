@@ -36,8 +36,8 @@ type authPlayerResponse struct {
 	CountryRestrictions []string `json:"CountryRestrictions"`
 }
 
-// AuthPlayer performs a handshake with PsyNet to establish a WebSocket connection
-func (p *PsyNet) AuthPlayer(platform Platform, authToken string, accountID string, accountName string) error {
+// AuthPlayer authenticates with PsyNet and returns a WebSocket connection.
+func (p *PsyNet) AuthPlayer(platform Platform, authToken string, accountID string, accountName string) (*PsyNetRPC, error) {
 	localPlayerId := fmt.Sprintf("%s|%s|0", platform, accountID)
 	req := &authPlayerRequest{
 		Platform:            string(platform),
@@ -58,13 +58,17 @@ func (p *PsyNet) AuthPlayer(platform Platform, authToken string, accountID strin
 	var res authPlayerResponse
 	err := p.postJSON([]string{"Auth", "AuthPlayer", "v2"}, req, &res)
 	if err != nil {
-		return fmt.Errorf("failed to authenticate player: %w", err)
+		return nil, fmt.Errorf("failed to authenticate player: %w", err)
 	}
 
-	err = p.establishSocket(res.PerConURLv2, res.PsyToken, res.SessionID)
+	wsConn, err := p.establishSocket(res.PerConURLv2, res.PsyToken, res.SessionID)
 	if err != nil {
-		return fmt.Errorf("failed to establish websocket: %w", err)
+		return nil, fmt.Errorf("failed to establish websocket: %w", err)
 	}
 
-	return nil
+	rpc := newPsyNetRPC(wsConn, p.logger)
+	go rpc.readMessages()
+	go rpc.pingHandler()
+
+	return rpc, nil
 }

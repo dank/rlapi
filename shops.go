@@ -1,5 +1,7 @@
 package rlapi
 
+import "context"
+
 // Shop represents a shop in the game
 type Shop struct {
 	ID        int     `json:"ID"`
@@ -128,44 +130,44 @@ type GetShopNotificationsResponse struct {
 	} `json:"ShopNotifications"`
 }
 
-// GetStandardShops gets the list of available shops
-func (p *PsyNet) GetStandardShops() (*GetStandardShopsResponse, error) {
+// GetStandardShops retrieves the list of available shops.
+func (p *PsyNetRPC) GetStandardShops(ctx context.Context) (*GetStandardShopsResponse, error) {
 	var result GetStandardShopsResponse
-	err := p.sendRequestSync(p.ctx, "Shops/GetStandardShops v1", map[string]interface{}{}, &result)
+	err := p.sendRequestSync(ctx, "Shops/GetStandardShops v1", map[string]interface{}{}, &result)
 	if err != nil {
 		return nil, err
 	}
 	return &result, nil
 }
 
-// GetShopCatalogue gets detailed shop items for the specified shop IDs
-func (p *PsyNet) GetShopCatalogue(shopIDs []int) (*GetShopCatalogueResponse, error) {
+// GetShopCatalogue retrieves detailed information about items available in specific shops.
+func (p *PsyNetRPC) GetShopCatalogue(ctx context.Context, shopIDs []int) (*GetShopCatalogueResponse, error) {
 	request := GetShopCatalogueRequest{
 		ShopIDs: shopIDs,
 	}
 
 	var result GetShopCatalogueResponse
-	err := p.sendRequestSync(p.ctx, "Shops/GetShopCatalogue v2", request, &result)
+	err := p.sendRequestSync(ctx, "Shops/GetShopCatalogue v2", request, &result)
 	if err != nil {
 		return nil, err
 	}
 	return &result, nil
 }
 
-// GetPlayerWallet gets the player's wallet information
-func (p *PsyNet) GetPlayerWallet() (*GetPlayerWalletResponse, error) {
+// GetPlayerWallet retrieves the authenticated player's wallet information.
+func (p *PsyNetRPC) GetPlayerWallet(ctx context.Context) (*GetPlayerWalletResponse, error) {
 	var result GetPlayerWalletResponse
-	err := p.sendRequestSync(p.ctx, "Shops/GetPlayerWallet v1", GetPlayerWalletRequest{}, &result)
+	err := p.sendRequestSync(ctx, "Shops/GetPlayerWallet v1", GetPlayerWalletRequest{}, &result)
 	if err != nil {
 		return nil, err
 	}
 	return &result, nil
 }
 
-// GetShopNotifications gets shop notifications
-func (p *PsyNet) GetShopNotifications() (*GetShopNotificationsResponse, error) {
+// GetShopNotifications retrieves current shop notifications.
+func (p *PsyNetRPC) GetShopNotifications(ctx context.Context) (*GetShopNotificationsResponse, error) {
 	var result GetShopNotificationsResponse
-	err := p.sendRequestSync(p.ctx, "Shops/GetShopNotifications v1", map[string]interface{}{}, &result)
+	err := p.sendRequestSync(ctx, "Shops/GetShopNotifications v1", map[string]interface{}{}, &result)
 	if err != nil {
 		return nil, err
 	}

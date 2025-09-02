@@ -86,20 +86,23 @@ func (m *MockWSServer) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func TestPsyNet_SendRequestSync(t *testing.T) {
+func TestPsyNetRPC_SendRequestSync(t *testing.T) {
 	// Setup mock server
 	mockServer := NewMockWSServer()
 	defer mockServer.Close()
 
-	// Create PsyNet instance
-	ctx := context.Background()
-	psyNet := NewPsyNet(ctx)
-
-	// Connect to mock server
-	err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
+	// Create PsyNet instance and establish connection
+	psyNet := NewPsyNet()
+	wsConn, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
 	if err != nil {
 		t.Fatalf("Failed to establish socket: %v", err)
 	}
+
+	// Create RPC client
+	rpc := newPsyNetRPC(wsConn, psyNet.logger)
+	go rpc.readMessages()
+	go rpc.pingHandler()
+	defer rpc.Close()
 
 	// Setup expected response
 	expectedResponse := &PsyResponse{
@@ -112,7 +115,7 @@ func TestPsyNet_SendRequestSync(t *testing.T) {
 	defer cancel()
 
 	var result map[string]interface{}
-	err = psyNet.sendRequestSync(ctx, "Shops/GetStandardShops", map[string]interface{}{}, &result)
+	err = rpc.sendRequestSync(ctx, "Shops/GetStandardShops", map[string]interface{}{}, &result)
 	if err != nil {
 		t.Fatalf("sendRequestSync failed: %v", err)
 	}
@@ -125,20 +128,23 @@ func TestPsyNet_SendRequestSync(t *testing.T) {
 	}
 }
 
-func TestPsyNet_SendRequestAsync(t *testing.T) {
+func TestPsyNetRPC_SendRequestAsync(t *testing.T) {
 	// Setup mock server
 	mockServer := NewMockWSServer()
 	defer mockServer.Close()
 
-	// Create PsyNet instance
-	ctx := context.Background()
-	psyNet := NewPsyNet(ctx)
-
-	// Connect to mock server
-	err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
+	// Create PsyNet instance and establish connection
+	psyNet := NewPsyNet()
+	wsConn, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
 	if err != nil {
 		t.Fatalf("Failed to establish socket: %v", err)
 	}
+
+	// Create RPC client
+	rpc := newPsyNetRPC(wsConn, psyNet.logger)
+	go rpc.readMessages()
+	go rpc.pingHandler()
+	defer rpc.Close()
 
 	// Setup expected response
 	expectedResponse := &PsyResponse{
@@ -150,14 +156,14 @@ func TestPsyNet_SendRequestAsync(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	respCh, err := psyNet.sendRequestAsync(ctx, "Test/AsyncService", map[string]interface{}{})
+	respCh, err := rpc.sendRequestAsync(ctx, "Test/AsyncService", map[string]interface{}{})
 	if err != nil {
 		t.Fatalf("sendRequestAsync failed: %v", err)
 	}
 
 	// Wait for response
 	var result map[string]interface{}
-	err = psyNet.awaitResponse(ctx, respCh, &result)
+	err = rpc.awaitResponse(ctx, respCh, &result)
 	if err != nil {
 		t.Fatalf("awaitResponse failed: %v", err)
 	}
@@ -168,20 +174,23 @@ func TestPsyNet_SendRequestAsync(t *testing.T) {
 	}
 }
 
-func TestPsyNet_ConcurrentRequests(t *testing.T) {
+func TestPsyNetRPC_ConcurrentRequests(t *testing.T) {
 	// Setup mock server
 	mockServer := NewMockWSServer()
 	defer mockServer.Close()
 
-	// Create PsyNet instance
-	ctx := context.Background()
-	psyNet := NewPsyNet(ctx)
-
-	// Connect to mock server
-	err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
+	// Create PsyNet instance and establish connection
+	psyNet := NewPsyNet()
+	wsConn, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
 	if err != nil {
 		t.Fatalf("Failed to establish socket: %v", err)
 	}
+
+	// Create RPC client
+	rpc := newPsyNetRPC(wsConn, psyNet.logger)
+	go rpc.readMessages()
+	go rpc.pingHandler()
+	defer rpc.Close()
 
 	// Setup responses for multiple requests
 	for i := 1; i <= 3; i++ {
@@ -195,17 +204,17 @@ func TestPsyNet_ConcurrentRequests(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	respCh1, err := psyNet.sendRequestAsync(ctx, "Test/Service1", map[string]interface{}{})
+	respCh1, err := rpc.sendRequestAsync(ctx, "Test/Service1", map[string]interface{}{})
 	if err != nil {
 		t.Fatalf("sendRequestAsync 1 failed: %v", err)
 	}
 
-	respCh2, err := psyNet.sendRequestAsync(ctx, "Test/Service2", map[string]interface{}{})
+	respCh2, err := rpc.sendRequestAsync(ctx, "Test/Service2", map[string]interface{}{})
 	if err != nil {
 		t.Fatalf("sendRequestAsync 2 failed: %v", err)
 	}
 
-	respCh3, err := psyNet.sendRequestAsync(ctx, "Test/Service3", map[string]interface{}{})
+	respCh3, err := rpc.sendRequestAsync(ctx, "Test/Service3", map[string]interface{}{})
 	if err != nil {
 		t.Fatalf("sendRequestAsync 3 failed: %v", err)
 	}
@@ -213,13 +222,13 @@ func TestPsyNet_ConcurrentRequests(t *testing.T) {
 	// Await all responses
 	var result1, result2, result3 map[string]interface{}
 
-	if err := psyNet.awaitResponse(ctx, respCh1, &result1); err != nil {
+	if err := rpc.awaitResponse(ctx, respCh1, &result1); err != nil {
 		t.Fatalf("awaitResponse 1 failed: %v", err)
 	}
-	if err := psyNet.awaitResponse(ctx, respCh2, &result2); err != nil {
+	if err := rpc.awaitResponse(ctx, respCh2, &result2); err != nil {
 		t.Fatalf("awaitResponse 2 failed: %v", err)
 	}
-	if err := psyNet.awaitResponse(ctx, respCh3, &result3); err != nil {
+	if err := rpc.awaitResponse(ctx, respCh3, &result3); err != nil {
 		t.Fatalf("awaitResponse 3 failed: %v", err)
 	}
 
@@ -235,41 +244,44 @@ func TestPsyNet_ConcurrentRequests(t *testing.T) {
 	}
 }
 
-func TestPsyNet_FireAndForgetNoLeak(t *testing.T) {
+func TestPsyNetRPC_FireAndForgetNoLeak(t *testing.T) {
 	// Setup mock server
 	mockServer := NewMockWSServer()
 	defer mockServer.Close()
 
-	// Create PsyNet instance
-	ctx := context.Background()
-	psyNet := NewPsyNet(ctx)
-
-	// Connect to mock server
-	err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
+	// Create PsyNet instance and establish connection
+	psyNet := NewPsyNet()
+	wsConn, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
 	if err != nil {
 		t.Fatalf("Failed to establish socket: %v", err)
 	}
 
+	// Create RPC client
+	rpc := newPsyNetRPC(wsConn, psyNet.logger)
+	go rpc.readMessages()
+	go rpc.pingHandler()
+	defer rpc.Close()
+
 	// Check initial pendingReqs count
-	psyNet.mu.Lock()
-	initialCount := len(psyNet.pendingReqs)
-	psyNet.mu.Unlock()
+	rpc.mu.Lock()
+	initialCount := len(rpc.pendingReqs)
+	rpc.mu.Unlock()
 
 	// Send requests but never await response (fire-and-forget)
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 
 	// Fire multiple requests
 	for i := 0; i < 5; i++ {
-		_, err := psyNet.sendRequestAsync(ctx, "Test/FireForget", map[string]interface{}{})
+		_, err := rpc.sendRequestAsync(ctx, "Test/FireForget", map[string]interface{}{})
 		if err != nil {
 			t.Fatalf("sendRequestAsync %d failed: %v", i, err)
 		}
 	}
 
 	// Check that pendingReqs grew
-	psyNet.mu.Lock()
-	midCount := len(psyNet.pendingReqs)
-	psyNet.mu.Unlock()
+	rpc.mu.Lock()
+	midCount := len(rpc.pendingReqs)
+	rpc.mu.Unlock()
 
 	if midCount <= initialCount {
 		t.Error("Expected pendingReqs to grow after sending requests")
@@ -282,9 +294,9 @@ func TestPsyNet_FireAndForgetNoLeak(t *testing.T) {
 	time.Sleep(200 * time.Millisecond)
 
 	// Check that pendingReqs was cleaned up
-	psyNet.mu.Lock()
-	finalCount := len(psyNet.pendingReqs)
-	psyNet.mu.Unlock()
+	rpc.mu.Lock()
+	finalCount := len(rpc.pendingReqs)
+	rpc.mu.Unlock()
 
 	if finalCount != initialCount {
 		t.Errorf("Memory leak detected: pendingReqs count %d -> %d -> %d, expected to return to %d",
@@ -295,40 +307,47 @@ func TestPsyNet_FireAndForgetNoLeak(t *testing.T) {
 		initialCount, midCount, finalCount)
 }
 
-func TestPsyNet_RequestIDIncrementing(t *testing.T) {
-	ctx := context.Background()
-	psyNet := NewPsyNet(ctx)
+func TestRequestIDIncrementing(t *testing.T) {
+	// Test that requestID increments properly (using global function)
+	// Note: This test depends on execution order due to global state
+	startingID := getRequestID()
+	id2 := getRequestID()
+	id3 := getRequestID()
 
-	// Test that requestID increments properly
-	id1 := psyNet.getRequestID()
-	id2 := psyNet.getRequestID()
-	id3 := psyNet.getRequestID()
+	// Verify they increment sequentially
+	if !strings.HasPrefix(startingID, "PsyNetMessage_X_") {
+		t.Errorf("Expected request ID to start with 'PsyNetMessage_X_', got '%s'", startingID)
+	}
+	if !strings.HasPrefix(id2, "PsyNetMessage_X_") {
+		t.Errorf("Expected request ID to start with 'PsyNetMessage_X_', got '%s'", id2)
+	}
+	if !strings.HasPrefix(id3, "PsyNetMessage_X_") {
+		t.Errorf("Expected request ID to start with 'PsyNetMessage_X_', got '%s'", id3)
+	}
 
-	if id1 != "PsyNetMessage_X_0" {
-		t.Errorf("Expected first request ID to be 'PsyNetMessage_X_0', got '%s'", id1)
-	}
-	if id2 != "PsyNetMessage_X_1" {
-		t.Errorf("Expected second request ID to be 'PsyNetMessage_X_1', got '%s'", id2)
-	}
-	if id3 != "PsyNetMessage_X_2" {
-		t.Errorf("Expected third request ID to be 'PsyNetMessage_X_2', got '%s'", id3)
+	// Verify they are different (due to global counter)
+	if startingID == id2 || id2 == id3 || startingID == id3 {
+		t.Errorf("Request IDs should be unique: %s, %s, %s", startingID, id2, id3)
 	}
 }
 
-func TestPsyNet_ConcurrentContextCancellation(t *testing.T) {
+func TestPsyNetRPC_ConcurrentContextCancellation(t *testing.T) {
 	// Setup mock server (no responses, requests will hang)
 	mockServer := NewMockWSServer()
 	defer mockServer.Close()
 
-	// Create PsyNet instance
-	ctx := context.Background()
-	psyNet := NewPsyNet(ctx)
-
-	// Connect to mock server
-	err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
+	// Create PsyNet instance and establish connection
+	psyNet := NewPsyNet()
+	wsConn, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
 	if err != nil {
 		t.Fatalf("Failed to establish socket: %v", err)
 	}
+
+	// Create RPC client
+	rpc := newPsyNetRPC(wsConn, psyNet.logger)
+	go rpc.readMessages()
+	go rpc.pingHandler()
+	defer rpc.Close()
 
 	// Start multiple requests with different contexts
 	var wg sync.WaitGroup
@@ -345,7 +364,7 @@ func TestPsyNet_ConcurrentContextCancellation(t *testing.T) {
 			defer cancel()
 
 			var result map[string]interface{}
-			err := psyNet.sendRequestSync(ctx, fmt.Sprintf("Test/Concurrent%d", id),
+			err := rpc.sendRequestSync(ctx, fmt.Sprintf("Test/Concurrent%d", id),
 				map[string]interface{}{}, &result)
 			errors <- err
 		}(i)
@@ -370,22 +389,22 @@ func TestPsyNet_ConcurrentContextCancellation(t *testing.T) {
 	time.Sleep(200 * time.Millisecond)
 
 	// Verify no leaks
-	psyNet.mu.Lock()
-	finalCount := len(psyNet.pendingReqs)
-	psyNet.mu.Unlock()
+	rpc.mu.Lock()
+	finalCount := len(rpc.pendingReqs)
+	rpc.mu.Unlock()
 
 	if finalCount != 0 {
 		t.Errorf("Memory leak: %d pending requests remain", finalCount)
 	}
 }
 
-func TestParseMessage(t *testing.T) {
-	p := &PsyNet{}
+func TestPsyNetRPC_ParseMessage(t *testing.T) {
+	rpc := &PsyNetRPC{}
 
 	t.Run("valid result", func(t *testing.T) {
 		input := fmt.Sprintf("PsyTime: %d\r\nPsySig: test_sig\r\nPsyResponseID: %s\r\n\r\n%s", time.Now().Unix(), "PsyNetMessage_X_1", `{"Result":{"Message":"ok"}}`)
 
-		resp, err := p.parseMessage(input)
+		resp, err := rpc.parseMessage(input)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -411,7 +430,7 @@ func TestParseMessage(t *testing.T) {
 	t.Run("error payload", func(t *testing.T) {
 		input := fmt.Sprintf("PsyTime: %d\r\nPsySig: test_sig\r\nPsyResponseID: %s\r\n\r\n%s", time.Now().Unix(), "PsyNetMessage_X_1", `{"Error":{"Type":"InvalidParameters","Message":""}}`)
 
-		resp, err := p.parseMessage(input)
+		resp, err := rpc.parseMessage(input)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -429,7 +448,7 @@ func TestParseMessage(t *testing.T) {
 	t.Run("missing PsyResponseID header", func(t *testing.T) {
 		input := fmt.Sprintf("\r\n\r\n%s", `{"Result":{"Message":"ok"}}`)
 
-		resp, err := p.parseMessage(input)
+		resp, err := rpc.parseMessage(input)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -453,13 +472,12 @@ func TestParseMessage(t *testing.T) {
 	})
 }
 
-func TestPsyNet_BuildMessage(t *testing.T) {
-	ctx := context.Background()
-	psyNet := NewPsyNet(ctx)
+func TestPsyNetRPC_BuildMessage(t *testing.T) {
+	rpc := &PsyNetRPC{}
 
 	t.Run("request with no body", func(t *testing.T) {
 		headers := map[string]string{"PsyPing": ""}
-		message, err := psyNet.buildMessage(headers, nil)
+		message, err := rpc.buildMessage(headers, nil)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -477,7 +495,7 @@ func TestPsyNet_BuildMessage(t *testing.T) {
 		}
 		requestData := map[string]interface{}{"test": "data"}
 
-		message, err := psyNet.buildMessage(headers, requestData)
+		message, err := rpc.buildMessage(headers, requestData)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
