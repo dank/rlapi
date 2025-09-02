@@ -104,7 +104,7 @@ type GetShopCatalogueResponse struct {
 }
 
 type GetPlayerWalletRequest struct {
-	PlayerID string `json:"PlayerID"`
+	PlayerID PlayerID `json:"PlayerID"`
 }
 
 type GetPlayerWalletResponse struct {

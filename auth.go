@@ -2,13 +2,6 @@ package rlapi
 
 import "fmt"
 
-type Platform string
-
-const (
-	Steam Platform = "Steam"
-	Epic           = "Epic"
-)
-
 type authPlayerRequest struct {
 	Platform            string `json:"Platform"`
 	PlayerName          string `json:"PlayerName"`
