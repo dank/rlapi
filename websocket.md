@@ -1971,8 +1971,8 @@ Checks which players from a list are allowed to display avatars.
 ### Misc
 These requests have non-standard message schemas and I don't really know what they do.
 #### DSR/RelayToServer v1
-Sent when joining a match to relay connection information to the dedicated server.
+Sent when joining a server.
 #### Party/System
-Related to parties but uses a non-standard schema.
+Non-standard schema.
 #### PsyPing
 Sent every 20 seconds. `PsyPing` header with an empty body.

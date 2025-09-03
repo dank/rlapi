@@ -74,7 +74,8 @@ PsyEnvironment: Prod
 
 The message format is: headers (each ending with `\r\n`) followed by `\r\n\r\n` separator, then JSON body.
 
-**Required Headers:** _(Values may be outdated)_
+#### Required Headers
+_(Values may be outdated)_
 
 | Name           | HTTP | WS | Value                                                                  |                                                                  |
 |----------------|------|----|------------------------------------------------------------------------|------------------------------------------------------------------|
