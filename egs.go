@@ -180,6 +180,15 @@ func (e *EGS) ExchangeEOSToken(exchangeCode string) (*EOSTokenResponse, error) {
 	})
 }
 
+// ExchangeEOSTokenFromSteam exchanges a Steam session ticket for an EOS authentication token
+func (e *EGS) ExchangeEOSTokenFromSteam(steamTicket string) (*EOSTokenResponse, error) {
+	return e.requestEOSToken(map[string]string{
+		"grant_type":          "external_auth",
+		"external_auth_type":  "steam_session_ticket",
+		"external_auth_token": steamTicket,
+	})
+}
+
 // RefreshEOSToken refreshes an EOS authentication token using a refresh token
 func (e *EGS) RefreshEOSToken(refreshToken string) (*EOSTokenResponse, error) {
 	return e.requestEOSToken(map[string]string{
