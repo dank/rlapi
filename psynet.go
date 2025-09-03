@@ -11,7 +11,6 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
-	"sync/atomic"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -24,9 +23,8 @@ const (
 	psyBuildId   = "151471783"
 	psySigKey    = "c338bd36fb8c42b1a431d30add939fc7"
 	pingInterval = 20 * time.Second
+	pongTimeout  = 10 * time.Second
 )
-
-var requestIDCounter int64
 
 type psyNetError struct {
 	Type    string `json:"Type"`
@@ -39,8 +37,9 @@ func (e psyNetError) Error() string {
 
 // PsyNet represents the HTTP API client, see PsyNetRPC for the WebSocket client.
 type PsyNet struct {
-	client *http.Client
-	logger *slog.Logger
+	client    *http.Client
+	requestID *requestIDCounter
+	logger    *slog.Logger
 }
 
 type PsyRequest struct {
@@ -56,12 +55,6 @@ type PsyResponse struct {
 	Error      *psyNetError    `json:"Error"`
 }
 
-func getRequestID() string {
-	id := atomic.LoadInt64(&requestIDCounter)
-	atomic.AddInt64(&requestIDCounter, 1)
-	return fmt.Sprintf("PsyNetMessage_X_%d", id)
-}
-
 func generatePsySig(body []byte) string {
 	h := hmac.New(sha256.New, []byte(psySigKey))
 	h.Write([]byte("-"))
@@ -71,12 +64,13 @@ func generatePsySig(body []byte) string {
 
 func NewPsyNet() *PsyNet {
 	return &PsyNet{
-		client: &http.Client{},
-		logger: slog.Default(),
+		client:    &http.Client{},
+		requestID: &requestIDCounter{},
+		logger:    slog.Default(),
 	}
 }
 
-func (p *PsyNet) establishSocket(url string, psyToken string, sessionID string) (*websocket.Conn, error) {
+func (p *PsyNet) establishSocket(url string, psyToken string, sessionID string) (*PsyNetRPC, error) {
 	p.logger.Debug("establishing websocket connection", slog.String("url", url))
 
 	dialer := websocket.Dialer{}
@@ -91,7 +85,7 @@ func (p *PsyNet) establishSocket(url string, psyToken string, sessionID string) 
 		return nil, fmt.Errorf("failed to dial websocket: %w", err)
 	}
 
-	return conn, nil
+	return newPsyNetRPC(conn, p.requestID, p.logger), nil
 }
 
 func (p *PsyNet) postJSON(path []string, params interface{}, result interface{}) error {
@@ -113,7 +107,7 @@ func (p *PsyNet) postJSON(path []string, params interface{}, result interface{})
 	req.Header.Set("User-Agent", fmt.Sprintf("RL Win/%s gzip (x86_64-pc-win32) curl-7.67.0 Schannel", gameVersion))
 	req.Header.Set("PsyBuildID", psyBuildId)
 	req.Header.Set("PsyEnvironment", "Prod")
-	req.Header.Set("PsyRequestID", getRequestID())
+	req.Header.Set("PsyRequestID", p.requestID.getID())
 	req.Header.Set("PsySig", generatePsySig(body))
 
 	resp, err := p.client.Do(req)

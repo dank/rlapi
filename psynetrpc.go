@@ -15,21 +15,40 @@ import (
 // PsyNetRPC represents an authenticated WebSocket connection.
 type PsyNetRPC struct {
 	wsConn      *websocket.Conn
+	requestID   *requestIDCounter
 	pendingReqs map[string]chan *PsyResponse
+	pongChan    chan struct{}
+	connected   bool
 	mu          sync.Mutex
 	logger      *slog.Logger
 }
 
-func newPsyNetRPC(wsConn *websocket.Conn, logger *slog.Logger) *PsyNetRPC {
+func newPsyNetRPC(wsConn *websocket.Conn, requestID *requestIDCounter, logger *slog.Logger) *PsyNetRPC {
 	return &PsyNetRPC{
 		wsConn:      wsConn,
+		requestID:   requestID,
 		pendingReqs: make(map[string]chan *PsyResponse),
+		pongChan:    make(chan struct{}, 1),
+		connected:   true,
 		logger:      logger,
 	}
 }
 
+func (p *PsyNetRPC) IsConnected() bool {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return p.connected && p.wsConn != nil
+}
+
 func (p *PsyNetRPC) Close() error {
-	if p.wsConn != nil {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	if p.wsConn != nil && p.connected {
+		p.connected = false
+
+		p.wsConn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+
 		return p.wsConn.Close()
 	}
 	return nil
@@ -92,33 +111,54 @@ func (p *PsyNetRPC) buildMessage(headers map[string]string, body interface{}) (s
 }
 
 func (p *PsyNetRPC) pingHandler() {
-	ticker := time.NewTicker(pingInterval)
-	defer ticker.Stop()
+	p.logger.Debug("starting ping handler")
 
-	for range ticker.C {
+	for {
+		time.Sleep(pingInterval)
+
+		pingMessage, err := p.buildMessage(map[string]string{"PsyPing": ""}, nil)
+		if err != nil {
+			p.logger.Error("failed to build ping message", slog.Any("err", err))
+			p.mu.Lock()
+			p.connected = false
+			p.mu.Unlock()
+			return
+		}
+
 		p.mu.Lock()
-		if p.wsConn != nil {
-			pingMessage, err := p.buildMessage(map[string]string{"PsyPing": ""}, nil)
-			if err != nil {
-				p.logger.Error("failed to build ping message", slog.Any("err", err))
-				p.mu.Unlock()
-				return
-			}
-
-			if err := p.wsConn.WriteMessage(websocket.TextMessage, []byte(pingMessage)); err != nil {
-				p.logger.Error("failed to send psynet ping", slog.Any("err", err))
-				p.mu.Unlock()
-				return
-			}
-
-			p.logger.Debug("sent psynet ping")
+		if !p.connected || p.wsConn == nil {
+			p.logger.Error("connection lost while preparing to ping")
+			p.mu.Unlock()
+			return
+		}
+		if err := p.wsConn.WriteMessage(websocket.TextMessage, []byte(pingMessage)); err != nil {
+			p.logger.Error("failed to send ping", slog.Any("err", err))
+			p.connected = false
+			p.mu.Unlock()
+			return
 		}
 		p.mu.Unlock()
+
+		p.logger.Debug("sent ping")
+
+		select {
+		case <-p.pongChan:
+			p.logger.Debug("received pong")
+		case <-time.After(pongTimeout):
+			p.logger.Error("pong timeout reached")
+			p.mu.Lock()
+			p.connected = false
+			p.mu.Unlock()
+			return
+		}
 	}
 }
 
 func (p *PsyNetRPC) readMessages() {
 	defer func() {
+		p.mu.Lock()
+		p.connected = false
+		p.mu.Unlock()
 		p.wsConn.Close()
 	}()
 
@@ -130,7 +170,10 @@ func (p *PsyNetRPC) readMessages() {
 		}
 
 		if strings.HasPrefix(string(message), "PsyPong:") {
-			p.logger.Debug("received psynet pong")
+			select {
+			case p.pongChan <- struct{}{}:
+			default:
+			}
 			continue
 		}
 
@@ -155,17 +198,38 @@ func (p *PsyNetRPC) readMessages() {
 }
 
 func (p *PsyNetRPC) sendRequestAsync(ctx context.Context, service string, data interface{}) (<-chan *PsyResponse, error) {
-	if p.wsConn == nil {
+	if !p.IsConnected() {
 		return nil, fmt.Errorf("websocket connection not established")
 	}
 
-	requestID := getRequestID()
+	requestID := p.requestID.getID()
 	p.logger.Debug("sending websocket request", slog.String("requestID", requestID), slog.String("service", service), slog.Any("data", data))
 
 	respCh := make(chan *PsyResponse, 1)
 
+	headers := map[string]string{
+		"PsyService":   service,
+		"PsyRequestID": requestID,
+	}
+	message, err := p.buildMessage(headers, data)
+	if err != nil {
+		return nil, fmt.Errorf("failed to buildm message: %w", err)
+	}
+
 	p.mu.Lock()
+	if !p.connected || p.wsConn == nil {
+		p.mu.Unlock()
+		return nil, fmt.Errorf("connection lost while preparing to send")
+	}
+
 	p.pendingReqs[requestID] = respCh
+	err = p.wsConn.WriteMessage(websocket.TextMessage, []byte(message))
+	if err != nil {
+		delete(p.pendingReqs, requestID)
+		p.mu.Unlock()
+		return nil, fmt.Errorf("failed to send request: %w", err)
+	}
+
 	p.mu.Unlock()
 
 	go func() {
@@ -176,36 +240,12 @@ func (p *PsyNetRPC) sendRequestAsync(ctx context.Context, service string, data i
 		close(respCh)
 	}()
 
-	headers := map[string]string{
-		"PsyService":   service,
-		"PsyRequestID": requestID,
-	}
-
-	message, err := p.buildMessage(headers, data)
-	if err != nil {
-		return nil, err
-	}
-
-	p.logger.Debug("sending websocket request", slog.String("requestID", requestID), slog.String("message", message))
-
-	p.mu.Lock()
-	err = p.wsConn.WriteMessage(websocket.TextMessage, []byte(message))
-	p.mu.Unlock()
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to send request: %w", err)
-	}
-
 	return respCh, nil
 }
 
 func (p *PsyNetRPC) awaitResponse(ctx context.Context, respCh <-chan *PsyResponse, result interface{}) error {
 	select {
 	case response := <-respCh:
-		p.mu.Lock()
-		delete(p.pendingReqs, response.ResponseID)
-		p.mu.Unlock()
-
 		if response.Error != nil {
 			return response.Error
 		}

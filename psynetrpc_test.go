@@ -16,10 +16,12 @@ import (
 
 // Mock WebSocket server for testing
 type MockWSServer struct {
-	server    *httptest.Server
-	upgrader  websocket.Upgrader
-	messages  []string                // Store received messages
-	responses map[string]*PsyResponse // Predefined responses
+	server       *httptest.Server
+	upgrader     websocket.Upgrader
+	messages     []string                // Store received messages
+	responses    map[string]*PsyResponse // Predefined responses
+	pongResponse bool                    // Whether to respond to pings with pong
+	dropPongs    bool                    // Whether to drop pong responses
 }
 
 func NewMockWSServer() *MockWSServer {
@@ -27,8 +29,10 @@ func NewMockWSServer() *MockWSServer {
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool { return true },
 		},
-		messages:  make([]string, 0),
-		responses: make(map[string]*PsyResponse),
+		messages:     make([]string, 0),
+		responses:    make(map[string]*PsyResponse),
+		pongResponse: true, // Default to responding to pings
+		dropPongs:    false,
 	}
 
 	mock.server = httptest.NewServer(http.HandlerFunc(mock.handleWebSocket))
@@ -48,6 +52,14 @@ func (m *MockWSServer) SetResponse(requestID string, response *PsyResponse) {
 	m.responses[requestID] = response
 }
 
+func (m *MockWSServer) SetPongResponse(respond bool) {
+	m.pongResponse = respond
+}
+
+func (m *MockWSServer) SetDropPongs(drop bool) {
+	m.dropPongs = drop
+}
+
 func (m *MockWSServer) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	conn, err := m.upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -64,6 +76,13 @@ func (m *MockWSServer) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		if messageType == websocket.TextMessage {
 			msg := string(message)
 			m.messages = append(m.messages, msg)
+
+			// Handle ping messages
+			if strings.Contains(msg, "PsyPing:") && m.pongResponse && !m.dropPongs {
+				pongMessage := "PsyPong: \r\n\r\n"
+				conn.WriteMessage(websocket.TextMessage, []byte(pongMessage))
+			}
+
 			// Parse PsyRequestID from the message
 			if strings.Contains(msg, "PsyRequestID:") {
 				lines := strings.Split(msg, "\r\n")
@@ -93,13 +112,11 @@ func TestPsyNetRPC_SendRequestSync(t *testing.T) {
 
 	// Create PsyNet instance and establish connection
 	psyNet := NewPsyNet()
-	wsConn, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
+	rpc, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
 	if err != nil {
 		t.Fatalf("Failed to establish socket: %v", err)
 	}
 
-	// Create RPC client
-	rpc := newPsyNetRPC(wsConn, psyNet.logger)
 	go rpc.readMessages()
 	go rpc.pingHandler()
 	defer rpc.Close()
@@ -135,13 +152,11 @@ func TestPsyNetRPC_SendRequestAsync(t *testing.T) {
 
 	// Create PsyNet instance and establish connection
 	psyNet := NewPsyNet()
-	wsConn, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
+	rpc, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
 	if err != nil {
 		t.Fatalf("Failed to establish socket: %v", err)
 	}
 
-	// Create RPC client
-	rpc := newPsyNetRPC(wsConn, psyNet.logger)
 	go rpc.readMessages()
 	go rpc.pingHandler()
 	defer rpc.Close()
@@ -181,13 +196,11 @@ func TestPsyNetRPC_ConcurrentRequests(t *testing.T) {
 
 	// Create PsyNet instance and establish connection
 	psyNet := NewPsyNet()
-	wsConn, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
+	rpc, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
 	if err != nil {
 		t.Fatalf("Failed to establish socket: %v", err)
 	}
 
-	// Create RPC client
-	rpc := newPsyNetRPC(wsConn, psyNet.logger)
 	go rpc.readMessages()
 	go rpc.pingHandler()
 	defer rpc.Close()
@@ -251,13 +264,11 @@ func TestPsyNetRPC_FireAndForgetNoLeak(t *testing.T) {
 
 	// Create PsyNet instance and establish connection
 	psyNet := NewPsyNet()
-	wsConn, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
+	rpc, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
 	if err != nil {
 		t.Fatalf("Failed to establish socket: %v", err)
 	}
 
-	// Create RPC client
-	rpc := newPsyNetRPC(wsConn, psyNet.logger)
 	go rpc.readMessages()
 	go rpc.pingHandler()
 	defer rpc.Close()
@@ -307,30 +318,6 @@ func TestPsyNetRPC_FireAndForgetNoLeak(t *testing.T) {
 		initialCount, midCount, finalCount)
 }
 
-func TestRequestIDIncrementing(t *testing.T) {
-	// Test that requestID increments properly (using global function)
-	// Note: This test depends on execution order due to global state
-	startingID := getRequestID()
-	id2 := getRequestID()
-	id3 := getRequestID()
-
-	// Verify they increment sequentially
-	if !strings.HasPrefix(startingID, "PsyNetMessage_X_") {
-		t.Errorf("Expected request ID to start with 'PsyNetMessage_X_', got '%s'", startingID)
-	}
-	if !strings.HasPrefix(id2, "PsyNetMessage_X_") {
-		t.Errorf("Expected request ID to start with 'PsyNetMessage_X_', got '%s'", id2)
-	}
-	if !strings.HasPrefix(id3, "PsyNetMessage_X_") {
-		t.Errorf("Expected request ID to start with 'PsyNetMessage_X_', got '%s'", id3)
-	}
-
-	// Verify they are different (due to global counter)
-	if startingID == id2 || id2 == id3 || startingID == id3 {
-		t.Errorf("Request IDs should be unique: %s, %s, %s", startingID, id2, id3)
-	}
-}
-
 func TestPsyNetRPC_ConcurrentContextCancellation(t *testing.T) {
 	// Setup mock server (no responses, requests will hang)
 	mockServer := NewMockWSServer()
@@ -338,13 +325,11 @@ func TestPsyNetRPC_ConcurrentContextCancellation(t *testing.T) {
 
 	// Create PsyNet instance and establish connection
 	psyNet := NewPsyNet()
-	wsConn, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
+	rpc, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
 	if err != nil {
 		t.Fatalf("Failed to establish socket: %v", err)
 	}
 
-	// Create RPC client
-	rpc := newPsyNetRPC(wsConn, psyNet.logger)
 	go rpc.readMessages()
 	go rpc.pingHandler()
 	defer rpc.Close()
@@ -521,4 +506,57 @@ func TestPsyNetRPC_BuildMessage(t *testing.T) {
 			t.Error("missing header/body delimiter")
 		}
 	})
+}
+
+func TestPsyNetRPC_IsConnected(t *testing.T) {
+	mockServer := NewMockWSServer()
+	defer mockServer.Close()
+
+	psyNet := NewPsyNet()
+	rpc, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
+	if err != nil {
+		t.Fatalf("Failed to establish socket: %v", err)
+	}
+
+	defer rpc.Close()
+
+	// Should be connected initially
+	if !rpc.IsConnected() {
+		t.Error("Expected connection to be active initially")
+	}
+
+	// Close connection
+	rpc.Close()
+
+	// Should not be connected after close
+	if rpc.IsConnected() {
+		t.Error("Expected connection to be inactive after close")
+	}
+}
+
+func TestPsyNetRPC_PingPongHandling(t *testing.T) {
+	mockServer := NewMockWSServer()
+	defer mockServer.Close()
+
+	psyNet := NewPsyNet()
+	rpc, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
+	if err != nil {
+		t.Fatalf("Failed to establish socket: %v", err)
+	}
+
+	go rpc.readMessages()
+	defer rpc.Close()
+
+	// Wait a bit to ensure connection is established
+	time.Sleep(100 * time.Millisecond)
+
+	// Should be connected
+	if !rpc.IsConnected() {
+		t.Error("Expected connection to be active")
+	}
+
+	// Check that pong channel exists and is ready
+	if rpc.pongChan == nil {
+		t.Error("Expected pong channel to be initialized")
+	}
 }

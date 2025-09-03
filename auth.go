@@ -54,12 +54,11 @@ func (p *PsyNet) AuthPlayer(platform Platform, authToken string, accountID strin
 		return nil, fmt.Errorf("failed to authenticate player: %w", err)
 	}
 
-	wsConn, err := p.establishSocket(res.PerConURLv2, res.PsyToken, res.SessionID)
+	rpc, err := p.establishSocket(res.PerConURLv2, res.PsyToken, res.SessionID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to establish websocket: %w", err)
 	}
 
-	rpc := newPsyNetRPC(wsConn, p.logger)
 	go rpc.readMessages()
 	go rpc.pingHandler()
 
