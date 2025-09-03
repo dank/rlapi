@@ -228,3 +228,29 @@ func (e *EGS) requestEOSToken(params map[string]string) (*EOSTokenResponse, erro
 
 	return &tokenResp, nil
 }
+
+// RevokeEOSToken revokes an EOS authentication token
+func (e *EGS) RevokeEOSToken(accessToken string) error {
+	form := url.Values{}
+	form.Set("token", accessToken)
+
+	req, err := http.NewRequest("POST", "https://api.epicgames.dev/epic/oauth/v2/revoke", strings.NewReader(form.Encode()))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("User-Agent", egsUserAgent)
+
+	resp, err := e.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to send request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("unexpected status code: %s", resp.Status)
+	}
+
+	return nil
+}
