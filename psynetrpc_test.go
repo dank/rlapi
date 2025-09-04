@@ -318,6 +318,70 @@ func TestPsyNetRPC_FireAndForgetNoLeak(t *testing.T) {
 		initialCount, midCount, finalCount)
 }
 
+func TestPsyNetRPC_RawMessage(t *testing.T) {
+	// Setup mock server
+	mockServer := NewMockWSServer()
+	defer mockServer.Close()
+
+	// Create PsyNet instance and establish connection
+	psyNet := NewPsyNet()
+	rpc, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
+	if err != nil {
+		t.Fatalf("Failed to establish socket: %v", err)
+	}
+
+	go rpc.readMessages()
+	defer rpc.Close()
+
+	eventCh := rpc.Events()
+
+	t.Run("unparseable message", func(t *testing.T) {
+		malformedMessage := "this is not a valid psynet message"
+
+		// Verify parseMessage fails
+		_, err = rpc.parseMessage(malformedMessage)
+		if err == nil {
+			t.Error("Expected parseMessage to fail on malformed message")
+		}
+
+		// Simulate what readMessages would do
+		rpc.sendEvent(EventTypeMessage, malformedMessage)
+
+		// Check that we get the event
+		select {
+		case event := <-eventCh:
+			if event.Type != EventTypeMessage {
+				t.Errorf("Expected message event, got %d", event.Type)
+			}
+			if event.Content != malformedMessage {
+				t.Errorf("Expected content to match original message")
+			}
+		case <-time.After(1 * time.Second):
+			t.Error("Expected to receive message event")
+		}
+	})
+
+	t.Run("unsolicited message", func(t *testing.T) {
+		unsolicitedMessage := "PsyTime: 123\r\nPsySig: test\r\n\r\n{\"Result\":{\"unsolicited\":\"data\"}}"
+
+		// Simulate receiving the message
+		rpc.sendEvent(EventTypeMessage, unsolicitedMessage)
+
+		// Check that we get the event
+		select {
+		case event := <-eventCh:
+			if event.Type != EventTypeMessage {
+				t.Errorf("Expected message event, got %d", event.Type)
+			}
+			if event.Content != unsolicitedMessage {
+				t.Errorf("Expected content to match original message")
+			}
+		case <-time.After(1 * time.Second):
+			t.Error("Expected to receive message event")
+		}
+	})
+}
+
 func TestPsyNetRPC_ConcurrentContextCancellation(t *testing.T) {
 	// Setup mock server (no responses, requests will hang)
 	mockServer := NewMockWSServer()

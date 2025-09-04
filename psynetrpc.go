@@ -12,12 +12,26 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type EventType int
+
+const (
+	EventTypeDisconnected EventType = iota
+	EventTypeMessage
+)
+
+// Event represents connection events or raw messages from the server
+type Event struct {
+	Type    EventType
+	Content string
+}
+
 // PsyNetRPC represents an authenticated WebSocket connection.
 type PsyNetRPC struct {
 	wsConn      *websocket.Conn
 	requestID   *requestIDCounter
 	pendingReqs map[string]chan *PsyResponse
 	pongChan    chan struct{}
+	eventCh     chan *Event
 	connected   bool
 	mu          sync.Mutex
 	logger      *slog.Logger
@@ -29,6 +43,7 @@ func newPsyNetRPC(wsConn *websocket.Conn, requestID *requestIDCounter, logger *s
 		requestID:   requestID,
 		pendingReqs: make(map[string]chan *PsyResponse),
 		pongChan:    make(chan struct{}, 1),
+		eventCh:     make(chan *Event, 32),
 		connected:   true,
 		logger:      logger,
 	}
@@ -48,6 +63,7 @@ func (p *PsyNetRPC) Close() error {
 		p.connected = false
 
 		p.wsConn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+		p.sendEvent(EventTypeDisconnected, "")
 
 		return p.wsConn.Close()
 	}
@@ -119,21 +135,18 @@ func (p *PsyNetRPC) pingHandler() {
 		pingMessage, err := p.buildMessage(map[string]string{"PsyPing": ""}, nil)
 		if err != nil {
 			p.logger.Error("failed to build ping message", slog.Any("err", err))
-			p.mu.Lock()
-			p.connected = false
-			p.mu.Unlock()
 			return
 		}
 
 		p.mu.Lock()
 		if !p.connected || p.wsConn == nil {
 			p.logger.Error("connection lost while preparing to ping")
+			p.sendEvent(EventTypeDisconnected, "")
 			p.mu.Unlock()
 			return
 		}
 		if err := p.wsConn.WriteMessage(websocket.TextMessage, []byte(pingMessage)); err != nil {
 			p.logger.Error("failed to send ping", slog.Any("err", err))
-			p.connected = false
 			p.mu.Unlock()
 			return
 		}
@@ -148,6 +161,7 @@ func (p *PsyNetRPC) pingHandler() {
 			p.logger.Error("pong timeout reached")
 			p.mu.Lock()
 			p.connected = false
+			p.sendEvent(EventTypeDisconnected, "")
 			p.mu.Unlock()
 			return
 		}
@@ -158,6 +172,7 @@ func (p *PsyNetRPC) readMessages() {
 	defer func() {
 		p.mu.Lock()
 		p.connected = false
+		p.sendEvent(EventTypeDisconnected, "")
 		p.mu.Unlock()
 		p.wsConn.Close()
 	}()
@@ -182,6 +197,7 @@ func (p *PsyNetRPC) readMessages() {
 		response, err := p.parseMessage(string(message))
 		if err != nil {
 			p.logger.Error("failed to parse psynet message", slog.Any("err", err), slog.String("message", string(message)))
+			p.sendEvent(EventTypeMessage, string(message))
 			continue
 		}
 
@@ -192,8 +208,11 @@ func (p *PsyNetRPC) readMessages() {
 
 			if exists {
 				ch <- response
+				continue
 			}
 		}
+
+		p.sendEvent(EventTypeMessage, string(message))
 	}
 }
 
@@ -267,4 +286,22 @@ func (p *PsyNetRPC) sendRequestSync(ctx context.Context, service string, data in
 	}
 
 	return p.awaitResponse(ctx, respCh, result)
+}
+
+// Events returns a channel that receives raw messages and connection events
+func (p *PsyNetRPC) Events() <-chan *Event {
+	return p.eventCh
+}
+
+func (p *PsyNetRPC) sendEvent(eventType EventType, content string) {
+	select {
+	case p.eventCh <- &Event{
+		Type:    eventType,
+		Content: content,
+	}:
+	default:
+		p.logger.Warn("event channel is full, dropping event",
+			slog.String("type", fmt.Sprintf("%d", eventType)),
+			slog.String("content", content))
+	}
 }
