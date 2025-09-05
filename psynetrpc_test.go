@@ -118,7 +118,7 @@ func TestPsyNetRPC_SendRequestSync(t *testing.T) {
 	}
 
 	go rpc.readMessages()
-	go rpc.pingHandler()
+	rpc.schedulePing()
 	defer rpc.Close()
 
 	// Setup expected response
@@ -158,7 +158,7 @@ func TestPsyNetRPC_SendRequestAsync(t *testing.T) {
 	}
 
 	go rpc.readMessages()
-	go rpc.pingHandler()
+	rpc.schedulePing()
 	defer rpc.Close()
 
 	// Setup expected response
@@ -202,7 +202,7 @@ func TestPsyNetRPC_ConcurrentRequests(t *testing.T) {
 	}
 
 	go rpc.readMessages()
-	go rpc.pingHandler()
+	rpc.schedulePing()
 	defer rpc.Close()
 
 	// Setup responses for multiple requests
@@ -270,7 +270,7 @@ func TestPsyNetRPC_FireAndForgetNoLeak(t *testing.T) {
 	}
 
 	go rpc.readMessages()
-	go rpc.pingHandler()
+	rpc.schedulePing()
 	defer rpc.Close()
 
 	// Check initial pendingReqs count
@@ -395,7 +395,7 @@ func TestPsyNetRPC_ConcurrentContextCancellation(t *testing.T) {
 	}
 
 	go rpc.readMessages()
-	go rpc.pingHandler()
+	rpc.schedulePing()
 	defer rpc.Close()
 
 	// Start multiple requests with different contexts
