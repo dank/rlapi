@@ -60,7 +60,7 @@ func (p *PsyNet) AuthPlayer(platform Platform, authToken string, accountID strin
 	}
 
 	go rpc.readMessages()
-	go rpc.pingHandler()
+	rpc.schedulePing()
 
 	return rpc, nil
 }
