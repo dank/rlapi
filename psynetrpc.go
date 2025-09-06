@@ -303,7 +303,7 @@ func (p *PsyNetRPC) awaitResponse(ctx context.Context, respCh <-chan *PsyRespons
 func (p *PsyNetRPC) sendRequestSync(ctx context.Context, service string, data interface{}, result interface{}) error {
 	respCh, err := p.sendRequestAsync(ctx, service, data)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to send async request for service: %s, err: %w", service, err)
 	}
 
 	return p.awaitResponse(ctx, respCh, result)
