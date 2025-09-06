@@ -60,16 +60,30 @@ func (p *PsyNetRPC) IsConnected() bool {
 
 func (p *PsyNetRPC) Close() error {
 	p.mu.Lock()
-	defer p.mu.Unlock()
-
 	if p.wsConn != nil && p.connected {
+		_ = p.wsConn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+		err := p.wsConn.Close()
+
+		// clean up pending events
 		p.connected = false
 
-		p.wsConn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+		if p.pingTimer != nil {
+			p.pingTimer.Stop()
+			p.pingTimer = nil
+		}
+
+		for reqID, ch := range p.pendingReqs {
+			close(ch)
+			delete(p.pendingReqs, reqID)
+		}
+
+		p.mu.Unlock()
 		p.sendEvent(EventTypeDisconnected, "")
 
-		return p.wsConn.Close()
+		return err
 	}
+
+	p.mu.Unlock()
 	return nil
 }
 
@@ -150,7 +164,6 @@ func (p *PsyNetRPC) sendPing() {
 	p.mu.Lock()
 	if !p.connected || p.wsConn == nil {
 		p.logger.Error("connection lost while preparing to ping")
-		p.sendEvent(EventTypeDisconnected, "")
 		p.mu.Unlock()
 		return
 	}
@@ -169,15 +182,14 @@ func (p *PsyNetRPC) sendPing() {
 		p.schedulePing()
 	case <-time.After(pongTimeout):
 		p.logger.Error("pong timeout reached")
-		p.sendEvent(EventTypeDisconnected, "")
+		_ = p.Close()
 		return
 	}
 }
 
 func (p *PsyNetRPC) readMessages() {
 	defer func() {
-		p.sendEvent(EventTypeDisconnected, "")
-		p.wsConn.Close()
+		_ = p.Close()
 	}()
 
 	for {
@@ -297,22 +309,6 @@ func (p *PsyNetRPC) Events() <-chan *Event {
 }
 
 func (p *PsyNetRPC) sendEvent(eventType EventType, content string) {
-	if eventType == EventTypeDisconnected {
-		p.mu.Lock()
-		p.connected = false
-
-		if p.pingTimer != nil {
-			p.pingTimer.Stop()
-			p.pingTimer = nil
-		}
-
-		for reqID, ch := range p.pendingReqs {
-			close(ch)
-			delete(p.pendingReqs, reqID)
-		}
-		p.mu.Unlock()
-	}
-
 	select {
 	case p.eventCh <- &Event{
 		Type:    eventType,

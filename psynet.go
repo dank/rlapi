@@ -70,6 +70,14 @@ func NewPsyNet() *PsyNet {
 	}
 }
 
+func NewPsyNetWithLogger(logger *slog.Logger) *PsyNet {
+	return &PsyNet{
+		client:    &http.Client{},
+		requestID: &requestIDCounter{},
+		logger:    logger,
+	}
+}
+
 func (p *PsyNet) establishSocket(url string, psyToken string, sessionID string) (*PsyNetRPC, error) {
 	p.logger.Debug("establishing websocket connection", slog.String("url", url))
 
