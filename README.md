@@ -186,8 +186,6 @@ The WebSocket endpoint URL is returned by the authentication endpoint, it is cur
     - [Matchmaking/PlayerCancelMatchmaking v1](REQUESTS.md#matchmakingplayercancelmatchmaking-v1)
     - [Matchmaking/PlayerSearchPrivateMatch v1](REQUESTS.md#matchmakingplayersearchprivatematch-v1)
     - [Matchmaking/StartMatchmaking v2](REQUESTS.md#matchmakingstartmatchmaking-v2)
-- Metrics
-    - [Metrics/RecordMetrics v1](REQUESTS.md#metricsrecordmetrics-v1)
 - Microtransaction
     - [Microtransaction/ClaimEntitlements v2](REQUESTS.md#microtransactionclaimentitlements-v2)
     - [Microtransaction/GetCatalog v1](REQUESTS.md#microtransactiongetcatalog-v1)
@@ -258,6 +256,7 @@ The WebSocket endpoint URL is returned by the authentication endpoint, it is cur
 - Users
     - [Users/CanShowAvatar v1](REQUESTS.md#userscanshowavatar-v1)
 - Misc
+    - [Metrics/RecordMetrics v1](REQUESTS.md#metricsrecordmetrics-v1)
     - [DSR/RelayToServer v1](REQUESTS.md#dsrrelaytoserver-v1)
     - [Party/System](REQUESTS.md#partysystem)
     - [PsyPing](REQUESTS.md#psyping)

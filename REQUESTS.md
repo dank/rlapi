@@ -656,9 +656,6 @@ Initiates matchmaking for specified playlists and regions.
 }
 ```
 
-### Metrics
-#### Metrics/RecordMetrics v1
-
 ### Microtransaction
 #### Microtransaction/ClaimEntitlements v2
 #### Microtransaction/GetCatalog v1
@@ -1969,10 +1966,11 @@ Checks which players from a list are allowed to display avatars.
 ```
 
 ### Misc
-These requests have non-standard message schemas and I don't really know what they do.
+#### Metrics/RecordMetrics v1
+Periodically report metrics.
 #### DSR/RelayToServer v1
 Sent when joining a server.
 #### Party/System
-Non-standard schema.
+Unknown usage, non-standard schema.
 #### PsyPing
-Sent every 20 seconds. `PsyPing` header with an empty body.
+Sent every 20 seconds. Non-standard schema, `PsyPing` header and empty body.
