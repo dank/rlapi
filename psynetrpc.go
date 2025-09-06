@@ -12,6 +12,8 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type emptyRequest struct{}
+
 type EventType int
 
 const (
