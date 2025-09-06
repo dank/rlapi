@@ -77,9 +77,7 @@ type ChallengeRequirementState struct {
 	Progress int `json:"Progress"`
 }
 
-// Request and Response types
-
-type getActiveChallengesRequest struct {
+type GetActiveChallengesRequest struct {
 	Challenges []interface{} `json:"Challenges"`
 	Folders    []interface{} `json:"Folders"`
 }
@@ -88,7 +86,7 @@ type GetActiveChallengesResponse struct {
 	Challenges []Challenge `json:"Challenges"`
 }
 
-type playerProgressRequest struct {
+type PlayerProgressRequest struct {
 	PlayerID PlayerID `json:"PlayerID"`
 }
 
@@ -96,7 +94,7 @@ type PlayerProgressResponse struct {
 	PlayerProgress PlayerProgress `json:"PlayerProgress"`
 }
 
-type collectRewardRequest struct {
+type CollectRewardRequest struct {
 	PlayerID    PlayerID `json:"PlayerID"`
 	ChallengeID int      `json:"ChallengeID"`
 }
@@ -106,7 +104,7 @@ type CollectRewardResponse struct {
 	UpdatedProgress  PlayerProgress   `json:"UpdatedProgress"`
 }
 
-type fteCheckpointCompleteRequest struct {
+type FTECheckpointCompleteRequest struct {
 	PlayerID     PlayerID `json:"PlayerID"`
 	CheckpointID int      `json:"CheckpointID"`
 }
@@ -115,7 +113,7 @@ type FTECheckpointCompleteResponse struct {
 	Success bool `json:"Success"`
 }
 
-type fteGroupCompleteRequest struct {
+type FTEGroupCompleteRequest struct {
 	PlayerID PlayerID `json:"PlayerID"`
 	GroupID  int      `json:"GroupID"`
 }
@@ -126,7 +124,7 @@ type FTEGroupCompleteResponse struct {
 
 // GetActiveChallenges retrieves the list of currently active challenges.
 func (p *PsyNetRPC) GetActiveChallenges(ctx context.Context) ([]Challenge, error) {
-	request := getActiveChallengesRequest{
+	request := GetActiveChallengesRequest{
 		Challenges: []interface{}{},
 		Folders:    []interface{}{},
 	}
@@ -141,7 +139,7 @@ func (p *PsyNetRPC) GetActiveChallenges(ctx context.Context) ([]Challenge, error
 
 // PlayerProgress retrieves a player's progress on challenges.
 func (p *PsyNetRPC) PlayerProgress(ctx context.Context, playerID PlayerID) (*PlayerProgress, error) {
-	request := playerProgressRequest{
+	request := PlayerProgressRequest{
 		PlayerID: playerID,
 	}
 
@@ -161,7 +159,7 @@ type CollectRewardResult struct {
 
 // CollectReward collects rewards from a completed challenge.
 func (p *PsyNetRPC) CollectReward(ctx context.Context, playerID PlayerID, challengeID int) (*CollectRewardResult, error) {
-	request := collectRewardRequest{
+	request := CollectRewardRequest{
 		PlayerID:    playerID,
 		ChallengeID: challengeID,
 	}
@@ -179,7 +177,7 @@ func (p *PsyNetRPC) CollectReward(ctx context.Context, playerID PlayerID, challe
 
 // FTECheckpointComplete marks a First Time Experience (FTE) checkpoint as complete.
 func (p *PsyNetRPC) FTECheckpointComplete(ctx context.Context, playerID PlayerID, checkpointID int) error {
-	request := fteCheckpointCompleteRequest{
+	request := FTECheckpointCompleteRequest{
 		PlayerID:     playerID,
 		CheckpointID: checkpointID,
 	}
@@ -197,7 +195,7 @@ func (p *PsyNetRPC) FTECheckpointComplete(ctx context.Context, playerID PlayerID
 
 // FTEGroupComplete marks a First Time Experience (FTE) group as complete.
 func (p *PsyNetRPC) FTEGroupComplete(ctx context.Context, playerID PlayerID, groupID int) error {
-	request := fteGroupCompleteRequest{
+	request := FTEGroupCompleteRequest{
 		PlayerID: playerID,
 		GroupID:  groupID,
 	}

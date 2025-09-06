@@ -57,9 +57,7 @@ type ReportReason struct {
 	Description string `json:"Description"`
 }
 
-// Request and Response types
-
-type getBanStatusRequest struct {
+type GetBanStatusRequest struct {
 	Players []PlayerID `json:"Players"`
 }
 
@@ -67,7 +65,7 @@ type GetBanStatusResponse struct {
 	BanMessages []BanMessage `json:"BanMessages"`
 }
 
-type getProfileRequest struct {
+type GetProfileRequest struct {
 	PlayerID PlayerID `json:"PlayerID"`
 }
 
@@ -75,7 +73,7 @@ type GetProfileResponse struct {
 	Profile PlayerProfile `json:"Profile"`
 }
 
-type getXPRequest struct {
+type GetXPRequest struct {
 	PlayerID PlayerID `json:"PlayerID"`
 }
 
@@ -83,7 +81,7 @@ type GetXPResponse struct {
 	XP PlayerXP `json:"XP"`
 }
 
-type getCreatorCodeRequest struct {
+type GetCreatorCodeRequest struct {
 	PlayerID PlayerID `json:"PlayerID"`
 }
 
@@ -91,7 +89,7 @@ type GetCreatorCodeResponse struct {
 	CreatorCode *CreatorCode `json:"CreatorCode"`
 }
 
-type reportRequest struct {
+type ReportRequest struct {
 	ReporterID  PlayerID `json:"ReporterID"`
 	ReportedID  PlayerID `json:"ReportedID"`
 	ReasonID    int      `json:"ReasonID"`
@@ -108,7 +106,7 @@ type ReportResponse struct {
 
 // GetBanStatus retrieves ban status information for specified players.
 func (p *PsyNetRPC) GetBanStatus(ctx context.Context, playerIDs []PlayerID) (*GetBanStatusResponse, error) {
-	request := getBanStatusRequest{
+	request := GetBanStatusRequest{
 		Players: playerIDs,
 	}
 
@@ -122,7 +120,7 @@ func (p *PsyNetRPC) GetBanStatus(ctx context.Context, playerIDs []PlayerID) (*Ge
 
 // GetProfile retrieves profile information for a specific player.
 func (p *PsyNetRPC) GetProfile(ctx context.Context, playerID PlayerID) (*GetProfileResponse, error) {
-	request := getProfileRequest{
+	request := GetProfileRequest{
 		PlayerID: playerID,
 	}
 
@@ -136,7 +134,7 @@ func (p *PsyNetRPC) GetProfile(ctx context.Context, playerID PlayerID) (*GetProf
 
 // GetXP retrieves XP information for a specific player.
 func (p *PsyNetRPC) GetXP(ctx context.Context, playerID PlayerID) (*GetXPResponse, error) {
-	request := getXPRequest{
+	request := GetXPRequest{
 		PlayerID: playerID,
 	}
 
@@ -150,7 +148,7 @@ func (p *PsyNetRPC) GetXP(ctx context.Context, playerID PlayerID) (*GetXPRespons
 
 // GetCreatorCode retrieves creator code information for a specific player.
 func (p *PsyNetRPC) GetCreatorCode(ctx context.Context, playerID PlayerID) (*GetCreatorCodeResponse, error) {
-	request := getCreatorCodeRequest{
+	request := GetCreatorCodeRequest{
 		PlayerID: playerID,
 	}
 
@@ -164,7 +162,7 @@ func (p *PsyNetRPC) GetCreatorCode(ctx context.Context, playerID PlayerID) (*Get
 
 // Report reports a player for inappropriate behavior.
 func (p *PsyNetRPC) Report(ctx context.Context, reporterID, reportedID PlayerID, reasonID int, description string, gameID, matchID *string) (*ReportResponse, error) {
-	request := reportRequest{
+	request := ReportRequest{
 		ReporterID:  reporterID,
 		ReportedID:  reportedID,
 		ReasonID:    reasonID,

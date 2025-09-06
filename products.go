@@ -53,9 +53,7 @@ type CrossEntitlementStatus struct {
 	LockedProductIDs        []int `json:"LockedProductIDs"`
 }
 
-// Request and Response types
-
-type getPlayerProductsRequest struct {
+type GetPlayerProductsRequest struct {
 	PlayerID         PlayerID `json:"PlayerID"`
 	UpdatedTimestamp string   `json:"UpdatedTimestamp"`
 }
@@ -68,7 +66,7 @@ type GetContainerDropTableResponse struct {
 	DropTables []ContainerDropTable `json:"DropTables"`
 }
 
-type unlockContainerRequest struct {
+type UnlockContainerRequest struct {
 	PlayerID       PlayerID `json:"PlayerID"`
 	InstanceIDs    []string `json:"InstanceIDs"`
 	KeyInstanceIDs []string `json:"KeyInstanceIDs"`
@@ -78,7 +76,7 @@ type UnlockContainerResponse struct {
 	Results []UnlockResult `json:"Results"`
 }
 
-type tradeInRequest struct {
+type TradeInRequest struct {
 	PlayerID         PlayerID `json:"PlayerID"`
 	ProductInstances []string `json:"ProductInstances"`
 }
@@ -94,7 +92,7 @@ type GetProductStatusResponse struct {
 
 // GetPlayerProducts retrieves all products owned by a specific player.
 func (p *PsyNetRPC) GetPlayerProducts(ctx context.Context, playerID PlayerID, updatedTimestamp string) (*GetPlayerProductsResponse, error) {
-	request := getPlayerProductsRequest{
+	request := GetPlayerProductsRequest{
 		PlayerID:         playerID,
 		UpdatedTimestamp: updatedTimestamp,
 	}
@@ -119,7 +117,7 @@ func (p *PsyNetRPC) GetContainerDropTable(ctx context.Context) (*GetContainerDro
 
 // UnlockContainer unlocks containers using keys and returns the unlocked items.
 func (p *PsyNetRPC) UnlockContainer(ctx context.Context, playerID PlayerID, instanceIDs, keyInstanceIDs []string) (*UnlockContainerResponse, error) {
-	request := unlockContainerRequest{
+	request := UnlockContainerRequest{
 		PlayerID:       playerID,
 		InstanceIDs:    instanceIDs,
 		KeyInstanceIDs: keyInstanceIDs,
@@ -135,7 +133,7 @@ func (p *PsyNetRPC) UnlockContainer(ctx context.Context, playerID PlayerID, inst
 
 // TradeIn trades in multiple items for new items of higher rarity.
 func (p *PsyNetRPC) TradeIn(ctx context.Context, playerID PlayerID, productInstances []string) (*TradeInResponse, error) {
-	request := tradeInRequest{
+	request := TradeInRequest{
 		PlayerID:         playerID,
 		ProductInstances: productInstances,
 	}

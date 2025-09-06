@@ -97,7 +97,7 @@ type GetStandardShopsResponse struct {
 	Shops []Shop `json:"Shops"`
 }
 
-type getShopCatalogueRequest struct {
+type GetShopCatalogueRequest struct {
 	ShopIDs []ShopID `json:"ShopIDs"`
 }
 
@@ -105,7 +105,7 @@ type GetShopCatalogueResponse struct {
 	Catalogues []ShopCatalogue `json:"Catalogues"`
 }
 
-type getPlayerWalletRequest struct {
+type GetPlayerWalletRequest struct {
 	PlayerID PlayerID `json:"PlayerID"`
 }
 
@@ -144,7 +144,7 @@ func (p *PsyNetRPC) GetStandardShops(ctx context.Context) (*GetStandardShopsResp
 
 // GetShopCatalogue retrieves detailed information about items available in specific shops.
 func (p *PsyNetRPC) GetShopCatalogue(ctx context.Context, shopIDs []ShopID) (*GetShopCatalogueResponse, error) {
-	request := getShopCatalogueRequest{
+	request := GetShopCatalogueRequest{
 		ShopIDs: shopIDs,
 	}
 
@@ -159,7 +159,7 @@ func (p *PsyNetRPC) GetShopCatalogue(ctx context.Context, shopIDs []ShopID) (*Ge
 // GetPlayerWallet retrieves the authenticated player's wallet information.
 func (p *PsyNetRPC) GetPlayerWallet(ctx context.Context, playerID PlayerID) (*GetPlayerWalletResponse, error) {
 	var result GetPlayerWalletResponse
-	err := p.sendRequestSync(ctx, "Shops/GetPlayerWallet v1", getPlayerWalletRequest{PlayerID: playerID}, &result)
+	err := p.sendRequestSync(ctx, "Shops/GetPlayerWallet v1", GetPlayerWalletRequest{PlayerID: playerID}, &result)
 	if err != nil {
 		return nil, err
 	}

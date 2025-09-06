@@ -2,7 +2,7 @@ package rlapi
 
 import "fmt"
 
-type authPlayerRequest struct {
+type AuthPlayerRequest struct {
 	Platform            string `json:"Platform"`
 	PlayerName          string `json:"PlayerName"`
 	PlayerID            string `json:"PlayerID"`
@@ -32,7 +32,7 @@ type AuthPlayerResponse struct {
 // AuthPlayer authenticates with PsyNet and returns a WebSocket connection.
 func (p *PsyNet) AuthPlayer(platform Platform, authToken string, accountID string, accountName string) (*PsyNetRPC, error) {
 	localPlayerId := fmt.Sprintf("%s|%s|0", platform, accountID)
-	req := &authPlayerRequest{
+	req := &AuthPlayerRequest{
 		Platform:            string(platform),
 		PlayerName:          accountName,
 		PlayerID:            accountID,

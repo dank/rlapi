@@ -93,9 +93,7 @@ type PublicTournament struct {
 	MaxParticipants  int                    `json:"MaxParticipants"`
 }
 
-// Request and Response types
-
-type getScheduleRegionRequest struct {
+type GetScheduleRegionRequest struct {
 	PlayerID PlayerID `json:"PlayerID"`
 }
 
@@ -103,7 +101,7 @@ type GetScheduleRegionResponse struct {
 	ScheduleRegion string `json:"ScheduleRegion"`
 }
 
-type getCycleDataRequest struct {
+type GetCycleDataRequest struct {
 	PlayerID PlayerID `json:"PlayerID"`
 }
 
@@ -117,7 +115,7 @@ type GetCycleDataResponse struct {
 	TournamentCurrencyID int              `json:"TournamentCurrencyID"`
 }
 
-type getScheduleRequest struct {
+type GetScheduleRequest struct {
 	PlayerID PlayerID `json:"PlayerID"`
 	Region   string   `json:"Region"`
 }
@@ -126,7 +124,7 @@ type GetScheduleResponse struct {
 	Schedule TournamentSchedule `json:"Schedule"`
 }
 
-type getPublicTournamentsRequest struct {
+type GetPublicTournamentsRequest struct {
 	Region string `json:"Region"`
 	Limit  int    `json:"Limit"`
 	Offset int    `json:"Offset"`
@@ -137,7 +135,7 @@ type GetPublicTournamentsResponse struct {
 	Total       int                `json:"Total"`
 }
 
-type registerTournamentRequest struct {
+type RegisterTournamentRequest struct {
 	PlayerID     PlayerID `json:"PlayerID"`
 	TournamentID string   `json:"TournamentID"`
 	TeamID       *string  `json:"TeamID,omitempty"`
@@ -148,7 +146,7 @@ type RegisterTournamentResponse struct {
 	RegistrationID string `json:"RegistrationID"`
 }
 
-type unsubscribeTournamentRequest struct {
+type UnsubscribeTournamentRequest struct {
 	PlayerID     PlayerID `json:"PlayerID"`
 	TournamentID string   `json:"TournamentID"`
 }
@@ -157,7 +155,7 @@ type UnsubscribeTournamentResponse struct {
 	Success bool `json:"Success"`
 }
 
-type getTournamentSubscriptionsRequest struct {
+type GetTournamentSubscriptionsRequest struct {
 	PlayerID PlayerID `json:"PlayerID"`
 }
 
@@ -167,7 +165,7 @@ type GetTournamentSubscriptionsResponse struct {
 
 // GetScheduleRegion retrieves the tournament schedule region for a player.
 func (p *PsyNetRPC) GetScheduleRegion(ctx context.Context, playerID PlayerID) (*GetScheduleRegionResponse, error) {
-	request := getScheduleRegionRequest{
+	request := GetScheduleRegionRequest{
 		PlayerID: playerID,
 	}
 
@@ -181,7 +179,7 @@ func (p *PsyNetRPC) GetScheduleRegion(ctx context.Context, playerID PlayerID) (*
 
 // GetCycleData retrieves tournament cycle data for a player.
 func (p *PsyNetRPC) GetCycleData(ctx context.Context, playerID PlayerID) (*GetCycleDataResponse, error) {
-	request := getCycleDataRequest{
+	request := GetCycleDataRequest{
 		PlayerID: playerID,
 	}
 
@@ -195,7 +193,7 @@ func (p *PsyNetRPC) GetCycleData(ctx context.Context, playerID PlayerID) (*GetCy
 
 // GetSchedule retrieves the tournament schedule for a specific region.
 func (p *PsyNetRPC) GetSchedule(ctx context.Context, playerID PlayerID, region string) (*GetScheduleResponse, error) {
-	request := getScheduleRequest{
+	request := GetScheduleRequest{
 		PlayerID: playerID,
 		Region:   region,
 	}
@@ -210,7 +208,7 @@ func (p *PsyNetRPC) GetSchedule(ctx context.Context, playerID PlayerID, region s
 
 // GetPublicTournaments retrieves a list of public tournaments.
 func (p *PsyNetRPC) GetPublicTournaments(ctx context.Context, region string, limit, offset int) (*GetPublicTournamentsResponse, error) {
-	request := getPublicTournamentsRequest{
+	request := GetPublicTournamentsRequest{
 		Region: region,
 		Limit:  limit,
 		Offset: offset,
@@ -226,7 +224,7 @@ func (p *PsyNetRPC) GetPublicTournaments(ctx context.Context, region string, lim
 
 // RegisterTournament registers a player for a tournament.
 func (p *PsyNetRPC) RegisterTournament(ctx context.Context, playerID PlayerID, tournamentID string, teamID *string) (*RegisterTournamentResponse, error) {
-	request := registerTournamentRequest{
+	request := RegisterTournamentRequest{
 		PlayerID:     playerID,
 		TournamentID: tournamentID,
 		TeamID:       teamID,
@@ -242,7 +240,7 @@ func (p *PsyNetRPC) RegisterTournament(ctx context.Context, playerID PlayerID, t
 
 // UnsubscribeTournament unsubscribes a player from a tournament.
 func (p *PsyNetRPC) UnsubscribeTournament(ctx context.Context, playerID PlayerID, tournamentID string) (*UnsubscribeTournamentResponse, error) {
-	request := unsubscribeTournamentRequest{
+	request := UnsubscribeTournamentRequest{
 		PlayerID:     playerID,
 		TournamentID: tournamentID,
 	}
@@ -257,7 +255,7 @@ func (p *PsyNetRPC) UnsubscribeTournament(ctx context.Context, playerID PlayerID
 
 // GetTournamentSubscriptions retrieves a player's tournament subscriptions.
 func (p *PsyNetRPC) GetTournamentSubscriptions(ctx context.Context, playerID PlayerID) (*GetTournamentSubscriptionsResponse, error) {
-	request := getTournamentSubscriptionsRequest{
+	request := GetTournamentSubscriptionsRequest{
 		PlayerID: playerID,
 	}
 

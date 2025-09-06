@@ -60,9 +60,7 @@ type PlayerWithSkills struct {
 	Skills   []Skill  `json:"Skills"`
 }
 
-// Request and Response types
-
-type getPlayerSkillRequest struct {
+type GetPlayerSkillRequest struct {
 	PlayerID PlayerID `json:"PlayerID"`
 }
 
@@ -71,7 +69,7 @@ type GetPlayerSkillResponse struct {
 	RewardLevels RewardLevels `json:"RewardLevels"`
 }
 
-type getSkillLeaderboardRequest struct {
+type GetSkillLeaderboardRequest struct {
 	Playlist          int  `json:"Playlist"`
 	BDisableCrossplay bool `json:"bDisableCrossplay"`
 }
@@ -81,7 +79,7 @@ type GetSkillLeaderboardResponse struct {
 	Platforms     []PlatformLeaderboard `json:"Platforms"`
 }
 
-type getSkillLeaderboardValueForUserRequest struct {
+type GetSkillLeaderboardValueForUserRequest struct {
 	Playlist int      `json:"Playlist"`
 	PlayerID PlayerID `json:"PlayerID"`
 }
@@ -93,7 +91,7 @@ type GetSkillLeaderboardValueForUserResponse struct {
 	Value         int     `json:"Value"`
 }
 
-type getSkillLeaderboardRankForUsersRequest struct {
+type GetSkillLeaderboardRankForUsersRequest struct {
 	Playlist  int        `json:"Playlist"`
 	PlayerIDs []PlayerID `json:"PlayerIDs"`
 }
@@ -103,7 +101,7 @@ type GetSkillLeaderboardRankForUsersResponse struct {
 	Players       []LeaderboardRankPlayer `json:"Players"`
 }
 
-type getPlayersSkillsRequest struct {
+type GetPlayersSkillsRequest struct {
 	PlayerIDs []PlayerID `json:"PlayerIDs"`
 }
 
@@ -113,7 +111,7 @@ type GetPlayersSkillsResponse struct {
 
 // GetPlayerSkill retrieves skill data for a specific player.
 func (p *PsyNetRPC) GetPlayerSkill(ctx context.Context, playerID PlayerID) (*GetPlayerSkillResponse, error) {
-	request := getPlayerSkillRequest{
+	request := GetPlayerSkillRequest{
 		PlayerID: playerID,
 	}
 
@@ -127,7 +125,7 @@ func (p *PsyNetRPC) GetPlayerSkill(ctx context.Context, playerID PlayerID) (*Get
 
 // GetSkillLeaderboard retrieves the skill leaderboard for a specific playlist.
 func (p *PsyNetRPC) GetSkillLeaderboard(ctx context.Context, playlist int, disableCrossplay bool) (*GetSkillLeaderboardResponse, error) {
-	request := getSkillLeaderboardRequest{
+	request := GetSkillLeaderboardRequest{
 		Playlist:          playlist,
 		BDisableCrossplay: disableCrossplay,
 	}
@@ -142,7 +140,7 @@ func (p *PsyNetRPC) GetSkillLeaderboard(ctx context.Context, playlist int, disab
 
 // GetSkillLeaderboardValueForUser retrieves a specific player's position and data on a skill leaderboard.
 func (p *PsyNetRPC) GetSkillLeaderboardValueForUser(ctx context.Context, playlist int, playerID PlayerID) (*GetSkillLeaderboardValueForUserResponse, error) {
-	request := getSkillLeaderboardValueForUserRequest{
+	request := GetSkillLeaderboardValueForUserRequest{
 		Playlist: playlist,
 		PlayerID: playerID,
 	}
@@ -157,7 +155,7 @@ func (p *PsyNetRPC) GetSkillLeaderboardValueForUser(ctx context.Context, playlis
 
 // GetSkillLeaderboardRankForUsers retrieves rank information for multiple players on a skill leaderboard.
 func (p *PsyNetRPC) GetSkillLeaderboardRankForUsers(ctx context.Context, playlist int, playerIDs []PlayerID) (*GetSkillLeaderboardRankForUsersResponse, error) {
-	request := getSkillLeaderboardRankForUsersRequest{
+	request := GetSkillLeaderboardRankForUsersRequest{
 		Playlist:  playlist,
 		PlayerIDs: playerIDs,
 	}
@@ -172,7 +170,7 @@ func (p *PsyNetRPC) GetSkillLeaderboardRankForUsers(ctx context.Context, playlis
 
 // GetPlayersSkills retrieves skill data for multiple players.
 func (p *PsyNetRPC) GetPlayersSkills(ctx context.Context, playerIDs []PlayerID) (*GetPlayersSkillsResponse, error) {
-	request := getPlayersSkillsRequest{
+	request := GetPlayersSkillsRequest{
 		PlayerIDs: playerIDs,
 	}
 

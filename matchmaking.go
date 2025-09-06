@@ -24,9 +24,7 @@ type MatchmakingResult struct {
 	EstimatedWaitTime int    `json:"EstimatedWaitTime"`
 }
 
-// Request and Response types
-
-type startMatchmakingRequest struct {
+type StartMatchmakingRequest struct {
 	Playlists         []int  `json:"Playlists"`
 	Region            string `json:"Region"`
 	PartyID           string `json:"PartyID"`
@@ -39,7 +37,7 @@ type StartMatchmakingResponse struct {
 	EstimatedWaitTime int    `json:"EstimatedWaitTime"`
 }
 
-type playerCancelMatchmakingRequest struct {
+type PlayerCancelMatchmakingRequest struct {
 	PlayerID PlayerID `json:"PlayerID"`
 }
 
@@ -47,7 +45,7 @@ type PlayerCancelMatchmakingResponse struct {
 	Success bool `json:"Success"`
 }
 
-type playerSearchPrivateMatchRequest struct {
+type PlayerSearchPrivateMatchRequest struct {
 	Name     string `json:"Name"`
 	Password string `json:"Password"`
 	Region   string `json:"Region"`
@@ -68,7 +66,7 @@ type PrivateMatch struct {
 
 // StartMatchmaking starts matchmaking for specified playlists.
 func (p *PsyNetRPC) StartMatchmaking(ctx context.Context, playlists []int, region, partyID string, disableCrossplay bool) (*StartMatchmakingResponse, error) {
-	request := startMatchmakingRequest{
+	request := StartMatchmakingRequest{
 		Playlists:         playlists,
 		Region:            region,
 		PartyID:           partyID,
@@ -85,7 +83,7 @@ func (p *PsyNetRPC) StartMatchmaking(ctx context.Context, playlists []int, regio
 
 // PlayerCancelMatchmaking cancels ongoing matchmaking for a player.
 func (p *PsyNetRPC) PlayerCancelMatchmaking(ctx context.Context, playerID PlayerID) (*PlayerCancelMatchmakingResponse, error) {
-	request := playerCancelMatchmakingRequest{
+	request := PlayerCancelMatchmakingRequest{
 		PlayerID: playerID,
 	}
 
@@ -99,7 +97,7 @@ func (p *PsyNetRPC) PlayerCancelMatchmaking(ctx context.Context, playerID Player
 
 // PlayerSearchPrivateMatch searches for private matches.
 func (p *PsyNetRPC) PlayerSearchPrivateMatch(ctx context.Context, name, password, region string) (*PlayerSearchPrivateMatchResponse, error) {
-	request := playerSearchPrivateMatchRequest{
+	request := PlayerSearchPrivateMatchRequest{
 		Name:     name,
 		Password: password,
 		Region:   region,

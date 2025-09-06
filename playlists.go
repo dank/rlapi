@@ -18,8 +18,6 @@ type ActivePlaylists struct {
 	XPLevelUnlocked int        `json:"XPLevelUnlocked"`
 }
 
-// Request and Response types
-
 type GetActivePlaylistsResponse struct {
 	CasualPlaylists []Playlist `json:"CasualPlaylists"`
 	RankedPlaylists []Playlist `json:"RankedPlaylists"`

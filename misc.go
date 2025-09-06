@@ -81,15 +81,13 @@ type TrainingCategory struct {
 	CategoryName string `json:"CategoryName"`
 }
 
-// Request and Response types
-
 // Population endpoints
 type GetPopulationResponse struct {
 	Playlists []PlaylistPopulation `json:"Playlists"`
 	Timestamp int64                `json:"Timestamp"`
 }
 
-type updatePlayerPlaylistRequest struct {
+type UpdatePlayerPlaylistRequest struct {
 	PlayerID   PlayerID `json:"PlayerID"`
 	PlaylistID int      `json:"PlaylistID"`
 }
@@ -104,7 +102,7 @@ type GetSubRegionsResponse struct {
 }
 
 // Match endpoints
-type getMatchHistoryRequest struct {
+type GetMatchHistoryRequest struct {
 	PlayerID PlayerID `json:"PlayerID"`
 	Limit    int      `json:"Limit"`
 	Offset   int      `json:"Offset"`
@@ -120,7 +118,7 @@ type GetGameServerPingListResponse struct {
 	Pings []GameServerPing `json:"Pings"`
 }
 
-type getClubPrivateMatchesRequest struct {
+type GetClubPrivateMatchesRequest struct {
 	ClubID int64 `json:"ClubID"`
 }
 
@@ -129,7 +127,7 @@ type GetClubPrivateMatchesResponse struct {
 }
 
 // Training endpoints
-type browseTrainingDataRequest struct {
+type BrowseTrainingDataRequest struct {
 	CategoryID *int    `json:"CategoryID,omitempty"`
 	Search     *string `json:"Search,omitempty"`
 	Limit      int     `json:"Limit"`
@@ -146,7 +144,7 @@ type GetTrainingMetadataResponse struct {
 }
 
 // Misc endpoints
-type joinMatchRequest struct {
+type JoinMatchRequest struct {
 	MatchID  string   `json:"MatchID"`
 	PlayerID PlayerID `json:"PlayerID"`
 }
@@ -156,7 +154,7 @@ type JoinMatchResponse struct {
 	ServerInfo string `json:"ServerInfo"`
 }
 
-type filterContentRequest struct {
+type FilterContentRequest struct {
 	Content string `json:"Content"`
 }
 
@@ -165,7 +163,7 @@ type FilterContentResponse struct {
 	IsFiltered      bool   `json:"IsFiltered"`
 }
 
-type recordMetricsRequest struct {
+type RecordMetricsRequest struct {
 	PlayerID PlayerID               `json:"PlayerID"`
 	Metrics  map[string]interface{} `json:"Metrics"`
 }
@@ -178,7 +176,7 @@ type GetTradeInFiltersResponse struct {
 	Filters map[string]interface{} `json:"Filters"`
 }
 
-type relayToServerRequest struct {
+type RelayToServerRequest struct {
 	ServerID string      `json:"ServerID"`
 	Message  interface{} `json:"Message"`
 }
@@ -188,7 +186,7 @@ type RelayToServerResponse struct {
 	Response interface{} `json:"Response"`
 }
 
-type canShowAvatarRequest struct {
+type CanShowAvatarRequest struct {
 	PlayerID PlayerID `json:"PlayerID"`
 }
 
@@ -210,7 +208,7 @@ func (p *PsyNetRPC) GetPopulation(ctx context.Context) (*GetPopulationResponse, 
 
 // UpdatePlayerPlaylist updates a player's playlist preference.
 func (p *PsyNetRPC) UpdatePlayerPlaylist(ctx context.Context, playerID PlayerID, playlistID int) (*UpdatePlayerPlaylistResponse, error) {
-	request := updatePlayerPlaylistRequest{
+	request := UpdatePlayerPlaylistRequest{
 		PlayerID:   playerID,
 		PlaylistID: playlistID,
 	}
@@ -239,7 +237,7 @@ func (p *PsyNetRPC) GetSubRegions(ctx context.Context) (*GetSubRegionsResponse, 
 
 // GetMatchHistory retrieves match history for a player.
 func (p *PsyNetRPC) GetMatchHistory(ctx context.Context, playerID PlayerID, limit, offset int) (*GetMatchHistoryResponse, error) {
-	request := getMatchHistoryRequest{
+	request := GetMatchHistoryRequest{
 		PlayerID: playerID,
 		Limit:    limit,
 		Offset:   offset,
@@ -267,7 +265,7 @@ func (p *PsyNetRPC) GetGameServerPingList(ctx context.Context) (*GetGameServerPi
 
 // GetClubPrivateMatches retrieves private matches for a club.
 func (p *PsyNetRPC) GetClubPrivateMatches(ctx context.Context, clubID int64) (*GetClubPrivateMatchesResponse, error) {
-	request := getClubPrivateMatchesRequest{
+	request := GetClubPrivateMatchesRequest{
 		ClubID: clubID,
 	}
 
@@ -283,7 +281,7 @@ func (p *PsyNetRPC) GetClubPrivateMatches(ctx context.Context, clubID int64) (*G
 
 // BrowseTrainingData searches for training packs.
 func (p *PsyNetRPC) BrowseTrainingData(ctx context.Context, categoryID *int, search *string, limit, offset int) (*BrowseTrainingDataResponse, error) {
-	request := browseTrainingDataRequest{
+	request := BrowseTrainingDataRequest{
 		CategoryID: categoryID,
 		Search:     search,
 		Limit:      limit,
@@ -312,7 +310,7 @@ func (p *PsyNetRPC) GetTrainingMetadata(ctx context.Context) (*GetTrainingMetada
 
 // JoinMatch joins a specific match.
 func (p *PsyNetRPC) JoinMatch(ctx context.Context, matchID string, playerID PlayerID) (*JoinMatchResponse, error) {
-	request := joinMatchRequest{
+	request := JoinMatchRequest{
 		MatchID:  matchID,
 		PlayerID: playerID,
 	}
@@ -327,7 +325,7 @@ func (p *PsyNetRPC) JoinMatch(ctx context.Context, matchID string, playerID Play
 
 // FilterContent filters content for inappropriate language.
 func (p *PsyNetRPC) FilterContent(ctx context.Context, content string) (*FilterContentResponse, error) {
-	request := filterContentRequest{
+	request := FilterContentRequest{
 		Content: content,
 	}
 
@@ -341,7 +339,7 @@ func (p *PsyNetRPC) FilterContent(ctx context.Context, content string) (*FilterC
 
 // RecordMetrics records player metrics.
 func (p *PsyNetRPC) RecordMetrics(ctx context.Context, playerID PlayerID, metrics map[string]interface{}) (*RecordMetricsResponse, error) {
-	request := recordMetricsRequest{
+	request := RecordMetricsRequest{
 		PlayerID: playerID,
 		Metrics:  metrics,
 	}
@@ -366,7 +364,7 @@ func (p *PsyNetRPC) GetTradeInFilters(ctx context.Context) (*GetTradeInFiltersRe
 
 // RelayToServer relays a message to a game server.
 func (p *PsyNetRPC) RelayToServer(ctx context.Context, serverID string, message interface{}) (*RelayToServerResponse, error) {
-	request := relayToServerRequest{
+	request := RelayToServerRequest{
 		ServerID: serverID,
 		Message:  message,
 	}
@@ -381,7 +379,7 @@ func (p *PsyNetRPC) RelayToServer(ctx context.Context, serverID string, message 
 
 // CanShowAvatar checks if a player's avatar can be shown.
 func (p *PsyNetRPC) CanShowAvatar(ctx context.Context, playerID PlayerID) (*CanShowAvatarResponse, error) {
-	request := canShowAvatarRequest{
+	request := CanShowAvatarRequest{
 		PlayerID: playerID,
 	}
 

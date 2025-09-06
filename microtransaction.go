@@ -46,9 +46,7 @@ type Purchase struct {
 	Metadata      map[string]interface{} `json:"Metadata"`
 }
 
-// Request and Response types
-
-type getCatalogRequest struct {
+type GetCatalogRequest struct {
 	Category string `json:"Category,omitempty"`
 	Region   string `json:"Region,omitempty"`
 }
@@ -58,7 +56,7 @@ type GetCatalogResponse struct {
 	Timestamp int64         `json:"Timestamp"`
 }
 
-type startPurchaseRequest struct {
+type StartPurchaseRequest struct {
 	ItemID   string                 `json:"ItemID"`
 	Quantity int                    `json:"Quantity"`
 	Metadata map[string]interface{} `json:"Metadata,omitempty"`
@@ -71,7 +69,7 @@ type StartPurchaseResponse struct {
 	RedirectURL   string `json:"RedirectURL,omitempty"`
 }
 
-type claimEntitlementsRequest struct {
+type ClaimEntitlementsRequest struct {
 	PlayerID       PlayerID `json:"PlayerID"`
 	EntitlementIDs []string `json:"EntitlementIDs,omitempty"`
 }
@@ -83,7 +81,7 @@ type ClaimEntitlementsResponse struct {
 
 // GetCatalog retrieves the microtransaction catalog.
 func (p *PsyNetRPC) GetCatalog(ctx context.Context, category, region string) (*GetCatalogResponse, error) {
-	request := getCatalogRequest{
+	request := GetCatalogRequest{
 		Category: category,
 		Region:   region,
 	}
@@ -98,7 +96,7 @@ func (p *PsyNetRPC) GetCatalog(ctx context.Context, category, region string) (*G
 
 // StartPurchase initiates a microtransaction purchase.
 func (p *PsyNetRPC) StartPurchase(ctx context.Context, itemID string, quantity int, metadata map[string]interface{}) (*StartPurchaseResponse, error) {
-	request := startPurchaseRequest{
+	request := StartPurchaseRequest{
 		ItemID:   itemID,
 		Quantity: quantity,
 		Metadata: metadata,
@@ -114,7 +112,7 @@ func (p *PsyNetRPC) StartPurchase(ctx context.Context, itemID string, quantity i
 
 // ClaimEntitlements claims available entitlements for a player.
 func (p *PsyNetRPC) ClaimEntitlements(ctx context.Context, playerID PlayerID, entitlementIDs []string) (*ClaimEntitlementsResponse, error) {
-	request := claimEntitlementsRequest{
+	request := ClaimEntitlementsRequest{
 		PlayerID:       playerID,
 		EntitlementIDs: entitlementIDs,
 	}
