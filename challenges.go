@@ -2,30 +2,30 @@ package rlapi
 
 import (
 	"context"
-	"fmt"
 )
 
-// Challenge represents a game challenge
+type ChallengeID int
+
+// Challenge represents an in-game challenge (eg, season challenges, weekly challenges, etc.)
 type Challenge struct {
-	ID                 int                    `json:"ID"`
+	ID                 ChallengeID            `json:"ID"`
 	Title              string                 `json:"Title"`
 	Description        string                 `json:"Description"`
 	Sort               int                    `json:"Sort"`
 	GroupID            int                    `json:"GroupID"`
 	XPUnlockLevel      int                    `json:"XPUnlockLevel"`
-	BIsRepeatable      bool                   `json:"bIsRepeatable"`
+	IsRepeatable       bool                   `json:"bIsRepeatable"`
 	RepeatLimit        int                    `json:"RepeatLimit"`
 	IconURL            string                 `json:"IconURL"`
 	BackgroundURL      *string                `json:"BackgroundURL"`
 	BackgroundColor    int                    `json:"BackgroundColor"`
 	Requirements       []ChallengeRequirement `json:"Requirements"`
 	Rewards            ChallengeRewards       `json:"Rewards"`
-	BAutoClaimRewards  bool                   `json:"bAutoClaimRewards"`
-	BIsPremium         bool                   `json:"bIsPremium"`
-	UnlockChallengeIDs []int                  `json:"UnlockChallengeIDs"`
+	AutoClaimRewards   bool                   `json:"bAutoClaimRewards"`
+	IsPremium          bool                   `json:"bIsPremium"`
+	UnlockChallengeIDs []ChallengeID          `json:"UnlockChallengeIDs"`
 }
 
-// ChallengeRequirement represents a requirement for completing a challenge
 type ChallengeRequirement struct {
 	RequiredCount int `json:"RequiredCount"`
 }
@@ -41,7 +41,7 @@ type ChallengeRewards struct {
 // ChallengeRewardProduct represents a product reward from a challenge
 type ChallengeRewardProduct struct {
 	ID                 string             `json:"ID"`
-	ChallengeID        int                `json:"ChallengeID"`
+	ChallengeID        ChallengeID        `json:"ChallengeID"`
 	ProductID          int                `json:"ProductID"`
 	InstanceID         *string            `json:"InstanceID"`
 	OriginalInstanceID *string            `json:"OriginalInstanceID"`
@@ -53,28 +53,23 @@ type ChallengeRewardProduct struct {
 	DeletedTimestamp   *int64             `json:"DeletedTimestamp"`
 }
 
-// PlayerProgress represents a player's progress on challenges
-type PlayerProgress struct {
-	PlayerID        PlayerID         `json:"PlayerID"`
-	ChallengeStates []ChallengeState `json:"ChallengeStates"`
-	Pips            int              `json:"Pips"`
-	StarLevel       int              `json:"StarLevel"`
-	StarLevelXP     int              `json:"StarLevelXP"`
+// ChallengeProgress represents a player's progress towards a challenge.
+type ChallengeProgress struct {
+	ID                  ChallengeID           `json:"ID"`
+	CompleteCount       int                   `json:"CompleteCount"`
+	IsHidden            bool                  `json:"bIsHidden"`
+	NotifyCompleted     bool                  `json:"bNotifyCompleted"`
+	NotifyAvailable     bool                  `json:"bNotifyAvailable"`
+	NotifyNewInfo       bool                  `json:"bNotifyNewInfo"`
+	RewardsAvailable    bool                  `json:"bRewardsAvailable"`
+	IsComplete          bool                  `json:"bComplete"`
+	RequirementProgress []RequirementProgress `json:"RequirementProgress"`
+	ProgressResetTime   int64                 `json:"ProgressResetTimeUTC"`
 }
 
-// ChallengeState represents the state of a challenge for a player
-type ChallengeState struct {
-	ID              int                         `json:"ID"`
-	CompletedCount  int                         `json:"CompletedCount"`
-	Requirements    []ChallengeRequirementState `json:"Requirements"`
-	Completed       bool                        `json:"Completed"`
-	ClaimedRewards  bool                        `json:"ClaimedRewards"`
-	ClaimedProducts []interface{}               `json:"ClaimedProducts"`
-}
-
-// ChallengeRequirementState represents the state of a challenge requirement
-type ChallengeRequirementState struct {
-	Progress int `json:"Progress"`
+type RequirementProgress struct {
+	ProgressCount  int `json:"ProgressCount"`
+	ProgressChange int `json:"ProgressChange"`
 }
 
 type GetActiveChallengesRequest struct {
@@ -87,39 +82,28 @@ type GetActiveChallengesResponse struct {
 }
 
 type PlayerProgressRequest struct {
-	PlayerID PlayerID `json:"PlayerID"`
+	PlayerID     PlayerID      `json:"PlayerID"`
+	ChallengeIDs []ChallengeID `json:"ChallengeIDs"`
 }
 
 type PlayerProgressResponse struct {
-	PlayerProgress PlayerProgress `json:"PlayerProgress"`
+	ProgressData []ChallengeProgress `json:"ProgressData"`
 }
 
 type CollectRewardRequest struct {
-	PlayerID    PlayerID `json:"PlayerID"`
-	ChallengeID int      `json:"ChallengeID"`
-}
-
-type CollectRewardResponse struct {
-	CollectedRewards ChallengeRewards `json:"CollectedRewards"`
-	UpdatedProgress  PlayerProgress   `json:"UpdatedProgress"`
+	PlayerID    PlayerID    `json:"PlayerID"`
+	ChallengeID ChallengeID `json:"ID"`
 }
 
 type FTECheckpointCompleteRequest struct {
-	PlayerID     PlayerID `json:"PlayerID"`
-	CheckpointID int      `json:"CheckpointID"`
-}
-
-type FTECheckpointCompleteResponse struct {
-	Success bool `json:"Success"`
+	PlayerID       PlayerID `json:"PlayerID"`
+	GroupName      string   `json:"GroupName"`
+	CheckpointName string   `json:"CheckpointName"`
 }
 
 type FTEGroupCompleteRequest struct {
-	PlayerID PlayerID `json:"PlayerID"`
-	GroupID  int      `json:"GroupID"`
-}
-
-type FTEGroupCompleteResponse struct {
-	Success bool `json:"Success"`
+	PlayerID  PlayerID `json:"PlayerID"`
+	GroupName string   `json:"GroupName"`
 }
 
 // GetActiveChallenges retrieves the list of currently active challenges.
@@ -137,10 +121,11 @@ func (p *PsyNetRPC) GetActiveChallenges(ctx context.Context) ([]Challenge, error
 	return result.Challenges, nil
 }
 
-// PlayerProgress retrieves a player's progress on challenges.
-func (p *PsyNetRPC) PlayerProgress(ctx context.Context, playerID PlayerID) (*PlayerProgress, error) {
+// GetChallengeProgress retrieves a player's progression on challenges.
+func (p *PsyNetRPC) GetChallengeProgress(ctx context.Context, playerID PlayerID, challengeIDs []ChallengeID) ([]ChallengeProgress, error) {
 	request := PlayerProgressRequest{
-		PlayerID: playerID,
+		PlayerID:     playerID,
+		ChallengeIDs: challengeIDs,
 	}
 
 	var result PlayerProgressResponse
@@ -148,65 +133,51 @@ func (p *PsyNetRPC) PlayerProgress(ctx context.Context, playerID PlayerID) (*Pla
 	if err != nil {
 		return nil, err
 	}
-	return &result.PlayerProgress, nil
+	return result.ProgressData, nil
 }
 
-// CollectRewardResult represents the result of collecting a reward
-type CollectRewardResult struct {
-	CollectedRewards ChallengeRewards `json:"CollectedRewards"`
-	UpdatedProgress  PlayerProgress   `json:"UpdatedProgress"`
-}
-
-// CollectReward collects rewards from a completed challenge.
-func (p *PsyNetRPC) CollectReward(ctx context.Context, playerID PlayerID, challengeID int) (*CollectRewardResult, error) {
+// CollectChallengeReward collects rewards from a completed challenge.
+func (p *PsyNetRPC) CollectChallengeReward(ctx context.Context, playerID PlayerID, challengeID ChallengeID) error {
 	request := CollectRewardRequest{
 		PlayerID:    playerID,
 		ChallengeID: challengeID,
 	}
 
-	var result CollectRewardResponse
+	var result interface{}
 	err := p.sendRequestSync(ctx, "Challenges/CollectReward v1", request, &result)
-	if err != nil {
-		return nil, err
-	}
-	return &CollectRewardResult{
-		CollectedRewards: result.CollectedRewards,
-		UpdatedProgress:  result.UpdatedProgress,
-	}, nil
-}
-
-// FTECheckpointComplete marks a First Time Experience (FTE) checkpoint as complete.
-func (p *PsyNetRPC) FTECheckpointComplete(ctx context.Context, playerID PlayerID, checkpointID int) error {
-	request := FTECheckpointCompleteRequest{
-		PlayerID:     playerID,
-		CheckpointID: checkpointID,
-	}
-
-	var result FTECheckpointCompleteResponse
-	err := p.sendRequestSync(ctx, "Challenges/FTECheckpointComplete v1", request, &result)
 	if err != nil {
 		return err
 	}
-	if !result.Success {
-		return fmt.Errorf("failed to complete FTE checkpoint %d", checkpointID)
+	return nil
+}
+
+// FTECheckpointComplete marks a First Time Experience (FTE) checkpoint as complete.
+func (p *PsyNetRPC) FTECheckpointComplete(ctx context.Context, playerID PlayerID, groupName string, checkpointName string) error {
+	request := FTECheckpointCompleteRequest{
+		PlayerID:       playerID,
+		GroupName:      groupName,
+		CheckpointName: checkpointName,
+	}
+
+	var result interface{}
+	err := p.sendRequestSync(ctx, "Challenges/FTECheckpointComplete v1", request, &result)
+	if err != nil {
+		return err
 	}
 	return nil
 }
 
 // FTEGroupComplete marks a First Time Experience (FTE) group as complete.
-func (p *PsyNetRPC) FTEGroupComplete(ctx context.Context, playerID PlayerID, groupID int) error {
+func (p *PsyNetRPC) FTEGroupComplete(ctx context.Context, playerID PlayerID, groupName string) error {
 	request := FTEGroupCompleteRequest{
-		PlayerID: playerID,
-		GroupID:  groupID,
+		PlayerID:  playerID,
+		GroupName: groupName,
 	}
 
-	var result FTEGroupCompleteResponse
+	var result interface{}
 	err := p.sendRequestSync(ctx, "Challenges/FTEGroupComplete v1", request, &result)
 	if err != nil {
 		return err
-	}
-	if !result.Success {
-		return fmt.Errorf("failed to complete FTE group %d", groupID)
 	}
 	return nil
 }
