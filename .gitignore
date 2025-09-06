@@ -5,6 +5,7 @@
 *.so
 *.dylib
 *.out
+.rlshops
 
 # Go workspace file
 go.work
