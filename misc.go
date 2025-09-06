@@ -256,7 +256,7 @@ func (p *PsyNetRPC) GetMatchHistory(ctx context.Context, playerID PlayerID, limi
 // GetGameServerPingList retrieves ping information for game servers.
 func (p *PsyNetRPC) GetGameServerPingList(ctx context.Context) (*GetGameServerPingListResponse, error) {
 	var result GetGameServerPingListResponse
-	err := p.sendRequestSync(ctx, "GameServer/GetGameServerPingList v1", map[string]interface{}{}, &result)
+	err := p.sendRequestSync(ctx, "GameServer/GetGameServerPingList v2", map[string]interface{}{}, &result)
 	if err != nil {
 		return nil, err
 	}

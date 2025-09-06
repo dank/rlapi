@@ -148,6 +148,14 @@ type GetClubTitleInstancesResponse struct {
 	TitleInstances []ClubTitleInstance `json:"TitleInstances"`
 }
 
+type RejectClubInviteRequest struct {
+	ClubID int64 `json:"ClubID"`
+}
+
+type RejectClubInviteResponse struct {
+	Success bool `json:"Success"`
+}
+
 // GetClubDetails retrieves detailed information about a specific club.
 func (p *PsyNetRPC) GetClubDetails(ctx context.Context, clubID int64) (*GetClubDetailsResponse, error) {
 	request := GetClubDetailsRequest{
@@ -155,7 +163,7 @@ func (p *PsyNetRPC) GetClubDetails(ctx context.Context, clubID int64) (*GetClubD
 	}
 
 	var result GetClubDetailsResponse
-	err := p.sendRequestSync(ctx, "Clubs/GetClubDetails v2", request, &result)
+	err := p.sendRequestSync(ctx, "Clubs/GetClubDetails v1", request, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +214,7 @@ func (p *PsyNetRPC) CreateClub(ctx context.Context, clubName, clubTag string, pr
 // UpdateClub updates the details of an existing club.
 func (p *PsyNetRPC) UpdateClub(ctx context.Context, request UpdateClubRequest) (*UpdateClubResponse, error) {
 	var result UpdateClubResponse
-	err := p.sendRequestSync(ctx, "Clubs/UpdateClub v1", request, &result)
+	err := p.sendRequestSync(ctx, "Clubs/UpdateClub v2", request, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +229,7 @@ func (p *PsyNetRPC) InviteToClub(ctx context.Context, clubID int64, playerID Pla
 	}
 
 	var result InviteToClubResponse
-	err := p.sendRequestSync(ctx, "Clubs/InviteToClub v1", request, &result)
+	err := p.sendRequestSync(ctx, "Clubs/InviteToClub v4", request, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +243,7 @@ func (p *PsyNetRPC) AcceptClubInvite(ctx context.Context, clubID int64) (*Accept
 	}
 
 	var result AcceptClubInviteResponse
-	err := p.sendRequestSync(ctx, "Clubs/AcceptClubInvite v1", request, &result)
+	err := p.sendRequestSync(ctx, "Clubs/AcceptClubInvite v2", request, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -278,6 +286,20 @@ func (p *PsyNetRPC) GetClubTitleInstances(ctx context.Context, clubID int64) (*G
 
 	var result GetClubTitleInstancesResponse
 	err := p.sendRequestSync(ctx, "Clubs/GetClubTitleInstances v1", request, &result)
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+// RejectClubInvite rejects an invitation to join a club.
+func (p *PsyNetRPC) RejectClubInvite(ctx context.Context, clubID int64) (*RejectClubInviteResponse, error) {
+	request := RejectClubInviteRequest{
+		ClubID: clubID,
+	}
+
+	var result RejectClubInviteResponse
+	err := p.sendRequestSync(ctx, "Clubs/RejectClubInvite v1", request, &result)
 	if err != nil {
 		return nil, err
 	}

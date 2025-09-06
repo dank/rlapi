@@ -172,7 +172,7 @@ func (p *PsyNetRPC) Report(ctx context.Context, reporterID, reportedID PlayerID,
 	}
 
 	var result ReportResponse
-	err := p.sendRequestSync(ctx, "Players/Report v1", request, &result)
+	err := p.sendRequestSync(ctx, "Players/Report v4", request, &result)
 	if err != nil {
 		return nil, err
 	}

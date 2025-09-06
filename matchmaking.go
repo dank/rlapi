@@ -74,7 +74,7 @@ func (p *PsyNetRPC) StartMatchmaking(ctx context.Context, playlists []int, regio
 	}
 
 	var result StartMatchmakingResponse
-	err := p.sendRequestSync(ctx, "Matchmaking/StartMatchmaking v1", request, &result)
+	err := p.sendRequestSync(ctx, "Matchmaking/StartMatchmaking v2", request, &result)
 	if err != nil {
 		return nil, err
 	}

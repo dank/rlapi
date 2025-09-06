@@ -118,7 +118,7 @@ func (p *PsyNetRPC) ClaimEntitlements(ctx context.Context, playerID PlayerID, en
 	}
 
 	var result ClaimEntitlementsResponse
-	err := p.sendRequestSync(ctx, "Microtransaction/ClaimEntitlements v1", request, &result)
+	err := p.sendRequestSync(ctx, "Microtransaction/ClaimEntitlements v2", request, &result)
 	if err != nil {
 		return nil, err
 	}
