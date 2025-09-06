@@ -131,7 +131,8 @@ func (e *EGS) requestToken(params map[string]string) (*TokenResponse, error) {
 			ErrorMessage string `json:"errorMessage"`
 		}
 		json.Unmarshal(body, &errorResp)
-		return nil, fmt.Errorf("authentication failed: %s - %s", errorResp.ErrorCode, errorResp.ErrorMessage)
+		// TODO: proper error extraction
+		return nil, fmt.Errorf("authentication failed: %v, %s - %s", resp.StatusCode, errorResp.ErrorCode, errorResp.ErrorMessage)
 	}
 
 	return &tokenResp, nil
