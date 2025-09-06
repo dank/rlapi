@@ -2,9 +2,21 @@ package rlapi
 
 import "context"
 
-// This file contains smaller API endpoints that don't warrant their own files
+type TradeInFilter struct {
+	ID               int      `json:"ID"`
+	Label            string   `json:"Label"`
+	SeriesIDs        []int    `json:"SeriesIDs"`
+	Blueprint        bool     `json:"bBlueprint"`
+	TradeInQualities []string `json:"TradeInQualities"`
+}
 
-// Population data structures
+type Server struct {
+	Region    string `json:"Region"`
+	Host      string `json:"Host"`
+	Port      string `json:"Port"`
+	SubRegion string `json:"SubRegion"`
+}
+
 type PopulationData struct {
 	Playlists []PlaylistPopulation `json:"Playlists"`
 	Timestamp int64                `json:"Timestamp"`
@@ -15,51 +27,12 @@ type PlaylistPopulation struct {
 	Population int `json:"Population"`
 }
 
-// Region data structures
 type SubRegion struct {
 	RegionID   string   `json:"RegionID"`
 	RegionName string   `json:"RegionName"`
 	SubRegions []string `json:"SubRegions"`
 }
 
-// Match data structures
-type MatchHistory struct {
-	Matches []Match `json:"Matches"`
-	HasMore bool    `json:"HasMore"`
-}
-
-type Match struct {
-	MatchID   string                 `json:"MatchID"`
-	Playlist  int                    `json:"Playlist"`
-	StartTime int64                  `json:"StartTime"`
-	Duration  int                    `json:"Duration"`
-	Result    string                 `json:"Result"`
-	Players   []MatchPlayer          `json:"Players"`
-	Stats     map[string]interface{} `json:"Stats"`
-}
-
-type MatchPlayer struct {
-	PlayerID   PlayerID               `json:"PlayerID"`
-	PlayerName string                 `json:"PlayerName"`
-	Team       int                    `json:"Team"`
-	Stats      map[string]interface{} `json:"Stats"`
-}
-
-// GameServer data structures
-type GameServerPing struct {
-	Region string `json:"Region"`
-	Ping   int    `json:"Ping"`
-}
-
-type ClubPrivateMatch struct {
-	MatchID     string `json:"MatchID"`
-	ClubID      int64  `json:"ClubID"`
-	Name        string `json:"Name"`
-	PlayerCount int    `json:"PlayerCount"`
-	MaxPlayers  int    `json:"MaxPlayers"`
-}
-
-// Training data structures
 type TrainingData struct {
 	Packs []TrainingPack `json:"Packs"`
 }
@@ -81,7 +54,6 @@ type TrainingCategory struct {
 	CategoryName string `json:"CategoryName"`
 }
 
-// Population endpoints
 type GetPopulationResponse struct {
 	Playlists []PlaylistPopulation `json:"Playlists"`
 	Timestamp int64                `json:"Timestamp"`
@@ -96,37 +68,22 @@ type UpdatePlayerPlaylistResponse struct {
 	Success bool `json:"Success"`
 }
 
-// Region endpoints
 type GetSubRegionsResponse struct {
 	Regions []SubRegion `json:"Regions"`
 }
 
-// Match endpoints
-type GetMatchHistoryRequest struct {
-	PlayerID PlayerID `json:"PlayerID"`
-	Limit    int      `json:"Limit"`
-	Offset   int      `json:"Offset"`
+type GetGameServerPingListRequest struct {
+	Regions []interface{} `json:"Regions"`
 }
 
-type GetMatchHistoryResponse struct {
-	Matches []Match `json:"Matches"`
-	HasMore bool    `json:"HasMore"`
-}
-
-// GameServer endpoints
 type GetGameServerPingListResponse struct {
-	Pings []GameServerPing `json:"Pings"`
-}
-
-type GetClubPrivateMatchesRequest struct {
-	ClubID int64 `json:"ClubID"`
+	Servers []Server `json:"Servers"`
 }
 
 type GetClubPrivateMatchesResponse struct {
-	Matches []ClubPrivateMatch `json:"Matches"`
+	Servers []Server `json:"Servers"`
 }
 
-// Training endpoints
 type BrowseTrainingDataRequest struct {
 	CategoryID *int    `json:"CategoryID,omitempty"`
 	Search     *string `json:"Search,omitempty"`
@@ -143,7 +100,6 @@ type GetTrainingMetadataResponse struct {
 	Categories []TrainingCategory `json:"Categories"`
 }
 
-// Misc endpoints
 type JoinMatchRequest struct {
 	MatchID  string   `json:"MatchID"`
 	PlayerID PlayerID `json:"PlayerID"`
@@ -155,12 +111,12 @@ type JoinMatchResponse struct {
 }
 
 type FilterContentRequest struct {
-	Content string `json:"Content"`
+	Content []string `json:"Content"`
+	Policy  string   `json:"Policy"`
 }
 
 type FilterContentResponse struct {
-	FilteredContent string `json:"FilteredContent"`
-	IsFiltered      bool   `json:"IsFiltered"`
+	FilteredContent []string `json:"FilteredContent"`
 }
 
 type RecordMetricsRequest struct {
@@ -173,7 +129,7 @@ type RecordMetricsResponse struct {
 }
 
 type GetTradeInFiltersResponse struct {
-	Filters map[string]interface{} `json:"Filters"`
+	TradeInFilters []TradeInFilter `json:"TradeInFilters"`
 }
 
 type RelayToServerRequest struct {
@@ -194,12 +150,10 @@ type CanShowAvatarResponse struct {
 	CanShow bool `json:"CanShow"`
 }
 
-// Population API methods
-
 // GetPopulation retrieves current playlist population data.
 func (p *PsyNetRPC) GetPopulation(ctx context.Context) (*GetPopulationResponse, error) {
 	var result GetPopulationResponse
-	err := p.sendRequestSync(ctx, "Population/GetPopulation v1", map[string]interface{}{}, &result)
+	err := p.sendRequestSync(ctx, "Population/GetPopulation v1", emptyRequest{}, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -221,63 +175,35 @@ func (p *PsyNetRPC) UpdatePlayerPlaylist(ctx context.Context, playerID PlayerID,
 	return &result, nil
 }
 
-// Region API methods
-
 // GetSubRegions retrieves available sub-regions.
 func (p *PsyNetRPC) GetSubRegions(ctx context.Context) (*GetSubRegionsResponse, error) {
 	var result GetSubRegionsResponse
-	err := p.sendRequestSync(ctx, "Regions/GetSubRegions v1", map[string]interface{}{}, &result)
+	err := p.sendRequestSync(ctx, "Regions/GetSubRegions v1", emptyRequest{}, &result)
 	if err != nil {
 		return nil, err
 	}
 	return &result, nil
 }
-
-// Match API methods
-
-// GetMatchHistory retrieves match history for a player.
-func (p *PsyNetRPC) GetMatchHistory(ctx context.Context, playerID PlayerID, limit, offset int) (*GetMatchHistoryResponse, error) {
-	request := GetMatchHistoryRequest{
-		PlayerID: playerID,
-		Limit:    limit,
-		Offset:   offset,
-	}
-
-	var result GetMatchHistoryResponse
-	err := p.sendRequestSync(ctx, "Matches/GetMatchHistory v1", request, &result)
-	if err != nil {
-		return nil, err
-	}
-	return &result, nil
-}
-
-// GameServer API methods
 
 // GetGameServerPingList retrieves ping information for game servers.
-func (p *PsyNetRPC) GetGameServerPingList(ctx context.Context) (*GetGameServerPingListResponse, error) {
+func (p *PsyNetRPC) GetGameServerPingList(ctx context.Context) ([]Server, error) {
 	var result GetGameServerPingListResponse
-	err := p.sendRequestSync(ctx, "GameServer/GetGameServerPingList v2", map[string]interface{}{}, &result)
+	err := p.sendRequestSync(ctx, "GameServer/GetGameServerPingList v2", GetGameServerPingListRequest{}, &result)
 	if err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return result.Servers, nil
 }
 
 // GetClubPrivateMatches retrieves private matches for a club.
-func (p *PsyNetRPC) GetClubPrivateMatches(ctx context.Context, clubID int64) (*GetClubPrivateMatchesResponse, error) {
-	request := GetClubPrivateMatchesRequest{
-		ClubID: clubID,
-	}
-
+func (p *PsyNetRPC) GetClubPrivateMatches(ctx context.Context) ([]Server, error) {
 	var result GetClubPrivateMatchesResponse
-	err := p.sendRequestSync(ctx, "GameServer/GetClubPrivateMatches v1", request, &result)
+	err := p.sendRequestSync(ctx, "GameServer/GetClubPrivateMatches v1", emptyRequest{}, &result)
 	if err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return result.Servers, nil
 }
-
-// Training API methods
 
 // BrowseTrainingData searches for training packs.
 func (p *PsyNetRPC) BrowseTrainingData(ctx context.Context, categoryID *int, search *string, limit, offset int) (*BrowseTrainingDataResponse, error) {
@@ -299,14 +225,12 @@ func (p *PsyNetRPC) BrowseTrainingData(ctx context.Context, categoryID *int, sea
 // GetTrainingMetadata retrieves training metadata including categories.
 func (p *PsyNetRPC) GetTrainingMetadata(ctx context.Context) (*GetTrainingMetadataResponse, error) {
 	var result GetTrainingMetadataResponse
-	err := p.sendRequestSync(ctx, "Training/GetTrainingMetadata v1", map[string]interface{}{}, &result)
+	err := p.sendRequestSync(ctx, "Training/GetTrainingMetadata v1", emptyRequest{}, &result)
 	if err != nil {
 		return nil, err
 	}
 	return &result, nil
 }
-
-// Misc API methods
 
 // JoinMatch joins a specific match.
 func (p *PsyNetRPC) JoinMatch(ctx context.Context, matchID string, playerID PlayerID) (*JoinMatchResponse, error) {
@@ -323,10 +247,10 @@ func (p *PsyNetRPC) JoinMatch(ctx context.Context, matchID string, playerID Play
 	return &result, nil
 }
 
-// FilterContent filters content for inappropriate language.
-func (p *PsyNetRPC) FilterContent(ctx context.Context, content string) (*FilterContentResponse, error) {
+func (p *PsyNetRPC) FilterContent(ctx context.Context, content []string, policy string) ([]string, error) {
 	request := FilterContentRequest{
 		Content: content,
+		Policy:  policy,
 	}
 
 	var result FilterContentResponse
@@ -334,7 +258,7 @@ func (p *PsyNetRPC) FilterContent(ctx context.Context, content string) (*FilterC
 	if err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return result.FilteredContent, nil
 }
 
 // RecordMetrics records player metrics.
@@ -353,13 +277,13 @@ func (p *PsyNetRPC) RecordMetrics(ctx context.Context, playerID PlayerID, metric
 }
 
 // GetTradeInFilters retrieves trade-in filters.
-func (p *PsyNetRPC) GetTradeInFilters(ctx context.Context) (*GetTradeInFiltersResponse, error) {
+func (p *PsyNetRPC) GetTradeInFilters(ctx context.Context) ([]TradeInFilter, error) {
 	var result GetTradeInFiltersResponse
-	err := p.sendRequestSync(ctx, "Drop/GetTradeInFilters v1", map[string]interface{}{}, &result)
+	err := p.sendRequestSync(ctx, "Drop/GetTradeInFilters v1", emptyRequest{}, &result)
 	if err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return result.TradeInFilters, nil
 }
 
 // RelayToServer relays a message to a game server.

@@ -458,9 +458,6 @@ Retrieves available trade-in categories and their eligible item series.
 }
 ```
 
-### Filters
-#### Filters/FilterContent v1
-
 ### GameServer
 #### GameServer/GetClubPrivateMatches v1
 Retrieves available private matches hosted by clubs.
@@ -1966,11 +1963,13 @@ Checks which players from a list are allowed to display avatars.
 ```
 
 ### Misc
-#### Metrics/RecordMetrics v1
-Periodically report metrics.
 #### DSR/RelayToServer v1
-Sent when joining a server.
+Sent when joining a server
+#### Filters/FilterContent v1
+Unknown purpose
+#### Metrics/RecordMetrics v1
+Periodically report metrics
 #### Party/System
-Unknown usage, non-standard schema.
+Unknown purpose, non-standard schema
 #### PsyPing
-Sent every 20 seconds. Non-standard schema, `PsyPing` header and empty body.
+Non-standard schema, `PsyPing` header and empty body. Sent every 20 seconds

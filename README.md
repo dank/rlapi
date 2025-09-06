@@ -175,8 +175,6 @@ The WebSocket endpoint URL is returned by the authentication endpoint, it is cur
     - [Clubs/UpdateClub v2](REQUESTS.md#clubsupdateclub-v2)
 - Drop
     - [Drop/GetTradeInFilters v1](REQUESTS.md#dropgettradeinfilters-v1)
-- Filters
-    - [Filters/FilterContent v1](REQUESTS.md#filtersfiltercontent-v1)
 - GameServer
     - [GameServer/GetClubPrivateMatches v1](REQUESTS.md#gameservergetclubprivatematches-v1)
     - [GameServer/GetGameServerPingList v2](REQUESTS.md#gameservergetgameserverpinglist-v2)
@@ -256,7 +254,8 @@ The WebSocket endpoint URL is returned by the authentication endpoint, it is cur
 - Users
     - [Users/CanShowAvatar v1](REQUESTS.md#userscanshowavatar-v1)
 - Misc
-    - [Metrics/RecordMetrics v1](REQUESTS.md#metricsrecordmetrics-v1)
     - [DSR/RelayToServer v1](REQUESTS.md#dsrrelaytoserver-v1)
+    - [Filters/FilterContent v1](REQUESTS.md#filtersfiltercontent-v1)
+    - [Metrics/RecordMetrics v1](REQUESTS.md#metricsrecordmetrics-v1)
     - [Party/System](REQUESTS.md#partysystem)
     - [PsyPing](REQUESTS.md#psyping)

@@ -10,7 +10,7 @@ import (
 	"github.com/dank/rlapi/examples/setup"
 )
 
-// Run all RPC requests to verify all of them return a valid response
+// Executes all available RPC requests to verify that each endpoint returns a valid response
 func main() {
 	slog.SetLogLoggerLevel(slog.LevelDebug)
 	rpc, playerID := setup.RPC()
@@ -27,6 +27,18 @@ func main() {
 	if err != nil {
 		slog.Error("clubs error", slog.Any("err", err))
 	}
+
+	tradeIns, err := rpc.GetTradeInFilters(ctx)
+	slog.Debug("GetTradeInFilters", slog.Any("tradeIns", tradeIns), slog.Any("err", err))
+
+	private, err := rpc.GetClubPrivateMatches(ctx)
+	slog.Debug("GetClubPrivateMatches", slog.Any("private", private), slog.Any("err", err))
+
+	ping, err := rpc.GetGameServerPingList(ctx)
+	slog.Debug("GetGameServerPingList", slog.Any("ping", ping), slog.Any("err", err))
+
+	matches, err := rpc.GetMatchHistory(ctx, playerID)
+	slog.Debug("GetMatchHistory", slog.Any("matches", matches), slog.Any("err", err))
 }
 
 func allChallenges(ctx context.Context, rpc *rlapi.PsyNetRPC, playerID rlapi.PlayerID) error {
