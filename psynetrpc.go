@@ -269,9 +269,13 @@ func (p *PsyNetRPC) sendRequestAsync(ctx context.Context, service string, data i
 	go func() {
 		<-ctx.Done()
 		p.mu.Lock()
+		ch := p.pendingReqs[requestID]
 		delete(p.pendingReqs, requestID)
 		p.mu.Unlock()
-		close(respCh)
+
+		if ch != nil {
+			close(ch)
+		}
 	}()
 
 	return respCh, nil
