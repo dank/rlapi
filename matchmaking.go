@@ -2,7 +2,7 @@ package rlapi
 
 import "context"
 
-// MatchmakingSettings represents matchmaking configuration
+// MatchmakingSettings represents matchmaking configuration.
 type MatchmakingSettings struct {
 	Playlists         []int  `json:"Playlists"`
 	Region            string `json:"Region"`
@@ -10,103 +10,78 @@ type MatchmakingSettings struct {
 	BDisableCrossplay bool   `json:"bDisableCrossplay"`
 }
 
-// PrivateMatchSearch represents search parameters for private matches
+// PrivateMatchSearch represents search parameters for private matches.
 type PrivateMatchSearch struct {
 	Name     string `json:"Name"`
 	Password string `json:"Password"`
 	Region   string `json:"Region"`
 }
 
-// MatchmakingResult represents the result of a matchmaking request
-type MatchmakingResult struct {
-	MatchID           string `json:"MatchID"`
-	Status            string `json:"Status"`
-	EstimatedWaitTime int    `json:"EstimatedWaitTime"`
+type MatchmakingRegion struct {
+	Name string `json:"Name"`
+	Ping int    `json:"Ping"`
 }
 
 type StartMatchmakingRequest struct {
-	Playlists         []int  `json:"Playlists"`
-	Region            string `json:"Region"`
-	PartyID           string `json:"PartyID"`
-	BDisableCrossplay bool   `json:"bDisableCrossplay"`
+	Regions          []MatchmakingRegion `json:"Regions"`
+	Playlists        []int               `json:"Playlists"`
+	SecondsSearching int                 `json:"SecondsSearching"`
+	CurrentServerID  string              `json:"CurrentServerID"`
+	DisableCrossplay bool                `json:"bDisableCrossplay"`
+	PartyID          PartyID             `json:"PartyID"`
+	PartyMembers     []PlayerID          `json:"PartyMembers"`
 }
 
 type StartMatchmakingResponse struct {
-	Success           bool   `json:"Success"`
-	MatchmakingID     string `json:"MatchmakingID"`
-	EstimatedWaitTime int    `json:"EstimatedWaitTime"`
-}
-
-type PlayerCancelMatchmakingRequest struct {
-	PlayerID PlayerID `json:"PlayerID"`
-}
-
-type PlayerCancelMatchmakingResponse struct {
-	Success bool `json:"Success"`
+	EstimatedQueueTime int `json:"EstimatedQueueTime"`
 }
 
 type PlayerSearchPrivateMatchRequest struct {
-	Name     string `json:"Name"`
-	Password string `json:"Password"`
-	Region   string `json:"Region"`
+	Region     string     `json:"Region"`
+	PlaylistID PlaylistID `json:"PlaylistID"`
 }
 
-type PlayerSearchPrivateMatchResponse struct {
-	Matches []PrivateMatch `json:"Matches"`
-}
-
-type PrivateMatch struct {
-	MatchID     string                 `json:"MatchID"`
-	Name        string                 `json:"Name"`
-	Region      string                 `json:"Region"`
-	PlayerCount int                    `json:"PlayerCount"`
-	MaxPlayers  int                    `json:"MaxPlayers"`
-	Settings    map[string]interface{} `json:"Settings"`
-}
-
-// StartMatchmaking starts matchmaking for specified playlists.
-func (p *PsyNetRPC) StartMatchmaking(ctx context.Context, playlists []int, region, partyID string, disableCrossplay bool) (*StartMatchmakingResponse, error) {
+// StartMatchmaking starts matchmaking for given playlists, returns the estimated queue time.
+func (p *PsyNetRPC) StartMatchmaking(ctx context.Context, playlists []int, region []MatchmakingRegion, disableCrossplay bool, partyID PartyID, partyMembers []PlayerID) (int, error) {
 	request := StartMatchmakingRequest{
-		Playlists:         playlists,
-		Region:            region,
-		PartyID:           partyID,
-		BDisableCrossplay: disableCrossplay,
+		Regions:          region,
+		Playlists:        playlists,
+		SecondsSearching: 1,
+		CurrentServerID:  "",
+		DisableCrossplay: disableCrossplay,
+		PartyID:          partyID,
+		PartyMembers:     partyMembers,
 	}
 
 	var result StartMatchmakingResponse
 	err := p.sendRequestSync(ctx, "Matchmaking/StartMatchmaking v2", request, &result)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
-	return &result, nil
+	return result.EstimatedQueueTime, nil
 }
 
-// PlayerCancelMatchmaking cancels ongoing matchmaking for a player.
-func (p *PsyNetRPC) PlayerCancelMatchmaking(ctx context.Context, playerID PlayerID) (*PlayerCancelMatchmakingResponse, error) {
-	request := PlayerCancelMatchmakingRequest{
-		PlayerID: playerID,
-	}
-
-	var result PlayerCancelMatchmakingResponse
-	err := p.sendRequestSync(ctx, "Matchmaking/PlayerCancelMatchmaking v1", request, &result)
+// PlayerCancelMatchmaking cancels ongoing matchmaking for the authenticated player.
+func (p *PsyNetRPC) PlayerCancelMatchmaking(ctx context.Context) error {
+	var result interface{}
+	err := p.sendRequestSync(ctx, "Matchmaking/PlayerCancelMatchmaking v1", emptyRequest{}, &result)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return &result, nil
+	return nil
 }
 
 // PlayerSearchPrivateMatch searches for private matches.
-func (p *PsyNetRPC) PlayerSearchPrivateMatch(ctx context.Context, name, password, region string) (*PlayerSearchPrivateMatchResponse, error) {
+func (p *PsyNetRPC) PlayerSearchPrivateMatch(ctx context.Context, region string, playlistID PlaylistID) error {
 	request := PlayerSearchPrivateMatchRequest{
-		Name:     name,
-		Password: password,
-		Region:   region,
+		Region:     region,
+		PlaylistID: playlistID,
 	}
 
-	var result PlayerSearchPrivateMatchResponse
+	var result interface{}
 	err := p.sendRequestSync(ctx, "Matchmaking/PlayerSearchPrivateMatch v1", request, &result)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return &result, nil
+	return nil
 }
