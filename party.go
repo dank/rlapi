@@ -81,6 +81,7 @@ type SendPartyMessageResponse struct {
 	MessageID string `json:"MessageID"`
 }
 
+// GetPlayerPartyInfo pending party invitations for the authenticated player.
 func (p *PsyNetRPC) GetPlayerPartyInfo(ctx context.Context) ([]interface{}, error) {
 	var result GetPlayerPartyInfoResponse
 	err := p.sendRequestSync(ctx, "Party/GetPlayerPartyInfo v1", emptyRequest{}, &result)
