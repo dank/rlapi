@@ -7,8 +7,8 @@ type Playlist struct {
 	NodeID    string `json:"NodeID"`
 	Playlist  int    `json:"Playlist"`
 	Type      int    `json:"Type"`
-	StartTime *int64 `json:"StartTime"`
-	EndTime   *int64 `json:"EndTime"`
+	StartTime *int   `json:"StartTime"`
+	EndTime   *int   `json:"EndTime"`
 }
 
 // ActivePlaylists represents all active playlists
@@ -27,7 +27,7 @@ type GetActivePlaylistsResponse struct {
 // GetActivePlaylists retrieves all currently active playlists.
 func (p *PsyNetRPC) GetActivePlaylists(ctx context.Context) (*GetActivePlaylistsResponse, error) {
 	var result GetActivePlaylistsResponse
-	err := p.sendRequestSync(ctx, "Playlists/GetActivePlaylists v1", map[string]interface{}{}, &result)
+	err := p.sendRequestSync(ctx, "Playlists/GetActivePlaylists v1", emptyRequest{}, &result)
 	if err != nil {
 		return nil, err
 	}

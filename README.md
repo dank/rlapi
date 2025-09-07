@@ -199,7 +199,6 @@ The WebSocket endpoint URL is returned by the authentication endpoint, it is cur
     - [Party/SendPartyInvite v2](REQUESTS.md#partysendpartyinvite-v2)
     - [Party/SendPartyJoinRequest v1](REQUESTS.md#partysendpartyjoinrequest-v1)
     - [Party/SendPartyMessage v1](REQUESTS.md#partysendpartymessage-v1)
-    - [Party/System](REQUESTS.md#partysystem)
 - Players
     - [Players/GetBanStatus v3](REQUESTS.md#playersgetbanstatus-v3)
     - [Players/GetCreatorCode v1](REQUESTS.md#playersgetcreatorcode-v1)

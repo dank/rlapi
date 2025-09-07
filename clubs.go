@@ -181,7 +181,7 @@ type RejectClubInviteRequest struct {
 	ClubID ClubID `json:"ClubID"`
 }
 
-// GetClubDetails retrieves detailed information about a specific club.
+// GetClubDetails retrieves detailed information about a given club.
 func (p *PsyNetRPC) GetClubDetails(ctx context.Context, clubID ClubID) (*ClubDetails, error) {
 	request := GetClubDetailsRequest{
 		ClubID: clubID,
@@ -195,7 +195,7 @@ func (p *PsyNetRPC) GetClubDetails(ctx context.Context, clubID ClubID) (*ClubDet
 	return &result.ClubDetails, nil
 }
 
-// GetPlayerClubDetails retrieves club details for a specific player.
+// GetPlayerClubDetails retrieves club details for a given player.
 func (p *PsyNetRPC) GetPlayerClubDetails(ctx context.Context, playerID PlayerID) (*ClubDetails, error) {
 	request := GetPlayerClubDetailsRequest{
 		PlayerID: playerID,
