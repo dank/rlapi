@@ -15,7 +15,7 @@ type Shop struct {
 	Title     *string `json:"Title"`
 }
 
-// ShopCatalogue represents the catalogue for a specific shop
+// ShopCatalogue represents the catalogue for a given shop
 type ShopCatalogue struct {
 	ShopID    ShopID     `json:"ShopID"`
 	ShopItems []ShopItem `json:"ShopItems"`
@@ -87,7 +87,7 @@ type ShopItemCost struct {
 	ShopScaledCost interface{}     `json:"ShopScaledCost"`
 }
 
-// CurrencyPrice represents a price in a specific currency
+// CurrencyPrice represents a price in the specified currency
 type CurrencyPrice struct {
 	ID     int `json:"ID"`
 	Amount int `json:"Amount"`
@@ -142,7 +142,7 @@ func (p *PsyNetRPC) GetStandardShops(ctx context.Context) (*GetStandardShopsResp
 	return &result, nil
 }
 
-// GetShopCatalogue retrieves detailed information about items available in specific shops.
+// GetShopCatalogue retrieves detailed information about items available in specified shops.
 func (p *PsyNetRPC) GetShopCatalogue(ctx context.Context, shopIDs []ShopID) (*GetShopCatalogueResponse, error) {
 	request := GetShopCatalogueRequest{
 		ShopIDs: shopIDs,
