@@ -2,49 +2,44 @@ package rlapi
 
 import "context"
 
-// TournamentCycleData represents tournament cycle information
-type TournamentCycleData struct {
-	CycleID              int              `json:"CycleID"`
-	CycleEndTime         int64            `json:"CycleEndTime"`
-	WeekID               int              `json:"WeekID"`
-	WeekEndTime          int64            `json:"WeekEndTime"`
-	WeeklyCurrencies     []interface{}    `json:"WeeklyCurrencies"`
-	Weeks                []TournamentWeek `json:"Weeks"`
-	TournamentCurrencyID int              `json:"TournamentCurrencyID"`
-}
+type TournamentID string
 
-// TournamentWeek represents a week within a tournament cycle
-type TournamentWeek struct {
-	Results []TournamentResult `json:"Results"`
-}
-
-// TournamentResult represents a tournament result
-type TournamentResult struct {
-	TournamentID string        `json:"TournamentID"`
-	Rank         int           `json:"Rank"`
-	Points       int           `json:"Points"`
-	Rewards      []interface{} `json:"Rewards"`
+type Tournament struct {
+	// Same as TournamentID but this is returned as an int for some reason
+	ID                     int      `json:"ID"`
+	Title                  string   `json:"Title"`
+	CreatorName            string   `json:"CreatorName"`
+	CreatorPlayerID        string   `json:"CreatorPlayerID"`
+	StartTime              int      `json:"StartTime"`
+	GenerateBracketTime    *int     `json:"GenerateBracketTime"`
+	MaxBracketSize         int      `json:"MaxBracketSize"`
+	RankMin                int      `json:"RankMin"`
+	RankMax                int      `json:"RankMax"`
+	Region                 string   `json:"Region"`
+	Platforms              []string `json:"Platforms"`
+	GameTags               string   `json:"GameTags"`
+	GameMode               int      `json:"GameMode"`
+	GameModes              []int    `json:"GameModes"`
+	TeamSize               int      `json:"TeamSize"`
+	MapSetName             *string  `json:"MapSetName"`
+	DisabledMaps           []string `json:"DisabledMaps"`
+	SeriesLength           int      `json:"SeriesLength"`
+	FinalSeriesLength      int      `json:"FinalSeriesLength"`
+	SeriesRoundLengths     []int    `json:"SeriesRoundLengths"`
+	SeedingType            int      `json:"SeedingType"`
+	TieBreaker             int      `json:"TieBreaker"`
+	Public                 bool     `json:"bPublic"`
+	TeamsRegistered        int      `json:"TeamsRegistered"`
+	ScheduleID             *int64   `json:"ScheduleID"`
+	IsSchedulingTournament bool     `json:"IsSchedulingTournament"`
 }
 
 // TournamentSchedule represents tournament schedule information
 type TournamentSchedule struct {
-	Tournaments []ScheduledTournament `json:"Tournaments"`
-	Region      string                `json:"Region"`
-}
-
-// ScheduledTournament represents a scheduled tournament
-type ScheduledTournament struct {
-	TournamentID        string                 `json:"TournamentID"`
-	Name                string                 `json:"Name"`
-	Description         string                 `json:"Description"`
-	StartTime           int64                  `json:"StartTime"`
-	EndTime             int64                  `json:"EndTime"`
-	RegistrationEnd     int64                  `json:"RegistrationEnd"`
-	MaxParticipants     int                    `json:"MaxParticipants"`
-	CurrentParticipants int                    `json:"CurrentParticipants"`
-	Format              TournamentFormat       `json:"Format"`
-	Requirements        TournamentRequirements `json:"Requirements"`
-	Rewards             []TournamentReward     `json:"Rewards"`
+	Time        int          `json:"Time"`
+	ScheduleID  int          `json:"ScheduleID"`
+	UpdateSkill bool         `json:"bUpdateSkill"`
+	Tournaments []Tournament `json:"Tournaments"`
 }
 
 // TournamentFormat represents tournament format settings
@@ -66,31 +61,22 @@ type TournamentRequirements struct {
 // TournamentReward represents a reward for tournament participation
 type TournamentReward struct {
 	Rank         int           `json:"Rank"`
-	Products     []ProductData `json:"Products"`
+	Products     []Product     `json:"Products"`
 	Currency     []interface{} `json:"Currency"`
 	TournamentXP int           `json:"TournamentXP"`
 }
 
 // TournamentSubscription represents a player's tournament subscription
 type TournamentSubscription struct {
-	TournamentID string   `json:"TournamentID"`
-	PlayerID     PlayerID `json:"PlayerID"`
-	SubscribedAt int64    `json:"SubscribedAt"`
-	Status       string   `json:"Status"`
+	TournamentID TournamentID `json:"TournamentID"`
+	PlayerID     PlayerID     `json:"PlayerID"`
+	SubscribedAt int          `json:"SubscribedAt"`
+	Status       string       `json:"Status"`
 }
 
-// PublicTournament represents a public tournament listing
-type PublicTournament struct {
-	TournamentID     string                 `json:"TournamentID"`
-	Name             string                 `json:"Name"`
-	Description      string                 `json:"Description"`
-	StartTime        int64                  `json:"StartTime"`
-	EndTime          int64                  `json:"EndTime"`
-	Format           TournamentFormat       `json:"Format"`
-	Requirements     TournamentRequirements `json:"Requirements"`
-	IsPublic         bool                   `json:"IsPublic"`
-	ParticipantCount int                    `json:"ParticipantCount"`
-	MaxParticipants  int                    `json:"MaxParticipants"`
+type TournamentCredentials struct {
+	Title    string `json:"Title"`
+	Password string `json:"Password"`
 }
 
 type GetScheduleRegionRequest struct {
@@ -106,13 +92,13 @@ type GetCycleDataRequest struct {
 }
 
 type GetCycleDataResponse struct {
-	CycleID              int              `json:"CycleID"`
-	CycleEndTime         int64            `json:"CycleEndTime"`
-	WeekID               int              `json:"WeekID"`
-	WeekEndTime          int64            `json:"WeekEndTime"`
-	WeeklyCurrencies     []interface{}    `json:"WeeklyCurrencies"`
-	Weeks                []TournamentWeek `json:"Weeks"`
-	TournamentCurrencyID int              `json:"TournamentCurrencyID"`
+	CycleID              int           `json:"CycleID"`
+	CycleEndTime         int64         `json:"CycleEndTime"`
+	WeekID               int           `json:"WeekID"`
+	WeekEndTime          int64         `json:"WeekEndTime"`
+	WeeklyCurrencies     []interface{} `json:"WeeklyCurrencies"`
+	Weeks                []interface{} `json:"Weeks"`
+	TournamentCurrencyID int           `json:"TournamentCurrencyID"`
 }
 
 type GetScheduleRequest struct {
@@ -121,50 +107,57 @@ type GetScheduleRequest struct {
 }
 
 type GetScheduleResponse struct {
-	Schedule TournamentSchedule `json:"Schedule"`
+	Schedules []TournamentSchedule `json:"Schedules"`
 }
 
 type GetPublicTournamentsRequest struct {
-	Region string `json:"Region"`
-	Limit  int    `json:"Limit"`
-	Offset int    `json:"Offset"`
+	PlayerID    PlayerID             `json:"PlayerID"`
+	Search      TournamentSearchInfo `json:"Search"`
+	TeamMembers []PlayerID           `json:"TeamMembers"`
+}
+
+type TournamentSearchInfo struct {
+	Text               string   `json:"Text"`
+	RankMin            int      `json:"RankMin"`
+	RankMax            int      `json:"RankMax"`
+	GameModes          []int    `json:"GameModes"`
+	Regions            []string `json:"Regions"`
+	TeamSize           int      `json:"TeamSize"`
+	BracketSize        int      `json:"BracketSize"`
+	EnableCrossplay    bool     `json:"bEnableCrossplay"`
+	StartTime          string   `json:"StartTime"`
+	EndTime            string   `json:"EndTime"`
+	ShowFull           bool     `json:"bShowFull"`
+	ShowIneligibleRank bool     `json:"bShowIneligibleRank"`
 }
 
 type GetPublicTournamentsResponse struct {
-	Tournaments []PublicTournament `json:"Tournaments"`
-	Total       int                `json:"Total"`
+	Tournaments []Tournament `json:"Tournaments"`
 }
 
 type RegisterTournamentRequest struct {
-	PlayerID     PlayerID `json:"PlayerID"`
-	TournamentID string   `json:"TournamentID"`
-	TeamID       *string  `json:"TeamID,omitempty"`
+	PlayerID     PlayerID              `json:"PlayerID"`
+	TournamentID TournamentID          `json:"TournamentID"`
+	Credentials  TournamentCredentials `json:"Credentials,omitempty"`
 }
 
 type RegisterTournamentResponse struct {
-	Success        bool   `json:"Success"`
-	RegistrationID string `json:"RegistrationID"`
+	Tournament Tournament `json:"Tournament"`
 }
 
 type UnsubscribeTournamentRequest struct {
-	PlayerID     PlayerID `json:"PlayerID"`
-	TournamentID string   `json:"TournamentID"`
-}
-
-type UnsubscribeTournamentResponse struct {
-	Success bool `json:"Success"`
+	PlayerID                           PlayerID     `json:"PlayerID"`
+	TournamentID                       TournamentID `json:"TournamentID"`
+	UnsubscribeAnyRegisteredTournament bool         `json:"bUnsubscribeAnyRegisteredTournament"`
+	TeamMembers                        []PlayerID   `json:"TeamMembers"`
 }
 
 type GetTournamentSubscriptionsRequest struct {
 	PlayerID PlayerID `json:"PlayerID"`
 }
 
-type GetTournamentSubscriptionsResponse struct {
-	Subscriptions []TournamentSubscription `json:"Subscriptions"`
-}
-
-// GetScheduleRegion retrieves the tournament schedule region for a player.
-func (p *PsyNetRPC) GetScheduleRegion(ctx context.Context, playerID PlayerID) (*GetScheduleRegionResponse, error) {
+// GetTournamentScheduleRegion retrieves the tournament schedule region for the authenticated player.
+func (p *PsyNetRPC) GetTournamentScheduleRegion(ctx context.Context, playerID PlayerID) (string, error) {
 	request := GetScheduleRegionRequest{
 		PlayerID: playerID,
 	}
@@ -172,13 +165,13 @@ func (p *PsyNetRPC) GetScheduleRegion(ctx context.Context, playerID PlayerID) (*
 	var result GetScheduleRegionResponse
 	err := p.sendRequestSync(ctx, "Tournaments/Status/GetScheduleRegion v1", request, &result)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return &result, nil
+	return result.ScheduleRegion, nil
 }
 
-// GetCycleData retrieves tournament cycle data for a player.
-func (p *PsyNetRPC) GetCycleData(ctx context.Context, playerID PlayerID) (*GetCycleDataResponse, error) {
+// GetTournamentCycleData retrieves tournament cycle data for the authenticated player.
+func (p *PsyNetRPC) GetTournamentCycleData(ctx context.Context, playerID PlayerID) (*GetCycleDataResponse, error) {
 	request := GetCycleDataRequest{
 		PlayerID: playerID,
 	}
@@ -191,8 +184,8 @@ func (p *PsyNetRPC) GetCycleData(ctx context.Context, playerID PlayerID) (*GetCy
 	return &result, nil
 }
 
-// GetSchedule retrieves the tournament schedule for a specific region.
-func (p *PsyNetRPC) GetSchedule(ctx context.Context, playerID PlayerID, region string) (*GetScheduleResponse, error) {
+// GetTournamentSchedule retrieves the tournament schedule for a given region.
+func (p *PsyNetRPC) GetTournamentSchedule(ctx context.Context, playerID PlayerID, region string) ([]TournamentSchedule, error) {
 	request := GetScheduleRequest{
 		PlayerID: playerID,
 		Region:   region,
@@ -203,15 +196,15 @@ func (p *PsyNetRPC) GetSchedule(ctx context.Context, playerID PlayerID, region s
 	if err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return result.Schedules, nil
 }
 
 // GetPublicTournaments retrieves a list of public tournaments.
-func (p *PsyNetRPC) GetPublicTournaments(ctx context.Context, region string, limit, offset int) (*GetPublicTournamentsResponse, error) {
+func (p *PsyNetRPC) GetPublicTournaments(ctx context.Context, playerID PlayerID, searchInfo TournamentSearchInfo, teamMembers []PlayerID) ([]Tournament, error) {
 	request := GetPublicTournamentsRequest{
-		Region: region,
-		Limit:  limit,
-		Offset: offset,
+		PlayerID:    playerID,
+		Search:      searchInfo,
+		TeamMembers: teamMembers,
 	}
 
 	var result GetPublicTournamentsResponse
@@ -219,15 +212,15 @@ func (p *PsyNetRPC) GetPublicTournaments(ctx context.Context, region string, lim
 	if err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return result.Tournaments, nil
 }
 
-// RegisterTournament registers a player for a tournament.
-func (p *PsyNetRPC) RegisterTournament(ctx context.Context, playerID PlayerID, tournamentID string, teamID *string) (*RegisterTournamentResponse, error) {
+// RegisterTournament registers the authenticated player for a tournament.
+func (p *PsyNetRPC) RegisterTournament(ctx context.Context, playerID PlayerID, tournamentID TournamentID, credentials TournamentCredentials) (*Tournament, error) {
 	request := RegisterTournamentRequest{
 		PlayerID:     playerID,
 		TournamentID: tournamentID,
-		TeamID:       teamID,
+		Credentials:  credentials,
 	}
 
 	var result RegisterTournamentResponse
@@ -235,34 +228,36 @@ func (p *PsyNetRPC) RegisterTournament(ctx context.Context, playerID PlayerID, t
 	if err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return &result.Tournament, nil
 }
 
-// UnsubscribeTournament unsubscribes a player from a tournament.
-func (p *PsyNetRPC) UnsubscribeTournament(ctx context.Context, playerID PlayerID, tournamentID string) (*UnsubscribeTournamentResponse, error) {
+// UnsubscribeTournament unsubscribes the authenticated player from a tournament.
+func (p *PsyNetRPC) UnsubscribeTournament(ctx context.Context, playerID PlayerID, tournamentID TournamentID, unsubscribeAnyRegisteredTournament bool, teamMembers []PlayerID) error {
 	request := UnsubscribeTournamentRequest{
-		PlayerID:     playerID,
-		TournamentID: tournamentID,
+		PlayerID:                           playerID,
+		TournamentID:                       tournamentID,
+		UnsubscribeAnyRegisteredTournament: unsubscribeAnyRegisteredTournament,
+		TeamMembers:                        teamMembers,
 	}
 
-	var result UnsubscribeTournamentResponse
+	var result interface{}
 	err := p.sendRequestSync(ctx, "Tournaments/Registration/UnsubscribeTournament v1", request, &result)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return &result, nil
+	return nil
 }
 
-// GetTournamentSubscriptions retrieves a player's tournament subscriptions.
-func (p *PsyNetRPC) GetTournamentSubscriptions(ctx context.Context, playerID PlayerID) (*GetTournamentSubscriptionsResponse, error) {
+// GetTournamentSubscriptions retrieves the authenticated player's tournament subscriptions.
+func (p *PsyNetRPC) GetTournamentSubscriptions(ctx context.Context, playerID PlayerID) (interface{}, error) {
 	request := GetTournamentSubscriptionsRequest{
 		PlayerID: playerID,
 	}
 
-	var result GetTournamentSubscriptionsResponse
+	var result interface{}
 	err := p.sendRequestSync(ctx, "Tournaments/Status/GetTournamentSubscriptions v1", request, &result)
 	if err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return result, nil
 }
