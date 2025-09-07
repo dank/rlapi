@@ -34,7 +34,7 @@ func main() {
 		slog.Error("matchmaking error", slog.Any("err", err))
 	}
 
-	err = allParty(ctx, rpc, playerID)
+	err = allParty(ctx, rpc)
 	if err != nil {
 		slog.Error("party error", slog.Any("err", err))
 	}
@@ -64,7 +64,7 @@ func main() {
 		slog.Error("products error", slog.Any("err", err))
 	}
 
-	err = allMicrotransactions(ctx, rpc, playerID)
+	err = allMTX(ctx, rpc)
 	if err != nil {
 		slog.Error("microtransactions error", slog.Any("err", err))
 	}
@@ -84,7 +84,7 @@ func main() {
 		slog.Error("training error", slog.Any("err", err))
 	}
 
-	err = allMiscellaneous(ctx, rpc, playerID)
+	err = allMisc(ctx, rpc, playerID)
 	if err != nil {
 		slog.Error("miscellaneous error", slog.Any("err", err))
 	}
@@ -212,7 +212,7 @@ func allMatchmaking(ctx context.Context, rpc *rlapi.PsyNetRPC, playerID rlapi.Pl
 	return nil
 }
 
-func allParty(ctx context.Context, rpc *rlapi.PsyNetRPC, playerID rlapi.PlayerID) error {
+func allParty(ctx context.Context, rpc *rlapi.PsyNetRPC) error {
 	party, err := rpc.CreateParty(ctx)
 	if err != nil {
 		return fmt.Errorf("CreateParty err: %w", err)
@@ -396,17 +396,17 @@ func allProducts(ctx context.Context, rpc *rlapi.PsyNetRPC, playerID rlapi.Playe
 	return nil
 }
 
-func allMicrotransactions(ctx context.Context, rpc *rlapi.PsyNetRPC, playerID rlapi.PlayerID) error {
-	catalog, err := rpc.GetMTXCatalog(ctx, playerID, "StarterPack")
+func allMTX(ctx context.Context, rpc *rlapi.PsyNetRPC) error {
+	catalog, err := rpc.GetMTXCatalog(ctx, "StarterPack")
 	if err != nil {
 		return fmt.Errorf("GetMTXCatalog err: %w", err)
 	}
 	slog.Debug("GetMTXCatalog", slog.Any("catalog", catalog))
 
-	err = rpc.StartMTXPurchase(ctx, playerID, []rlapi.MTXCartItem{{CatalogID: 13, Count: 1}})
+	err = rpc.StartMTXPurchase(ctx, []rlapi.MTXCartItem{{CatalogID: 13, Count: 1}})
 	slog.Debug("StartMTXPurchase", slog.Any("err", err))
 
-	entitlements, err := rpc.ClaimMTXEntitlements(ctx, playerID, "test-auth-code")
+	entitlements, err := rpc.ClaimMTXEntitlements(ctx, "test-auth-code")
 	slog.Debug("ClaimMTXEntitlements", slog.Any("entitlements", entitlements), slog.Any("err", err))
 
 	return nil
@@ -482,7 +482,7 @@ func allTraining(ctx context.Context, rpc *rlapi.PsyNetRPC) error {
 	return nil
 }
 
-func allMiscellaneous(ctx context.Context, rpc *rlapi.PsyNetRPC, playerID rlapi.PlayerID) error {
+func allMisc(ctx context.Context, rpc *rlapi.PsyNetRPC, playerID rlapi.PlayerID) error {
 	tradeIns, err := rpc.GetTradeInFilters(ctx)
 	slog.Debug("GetTradeInFilters", slog.Any("tradeIns", tradeIns), slog.Any("err", err))
 

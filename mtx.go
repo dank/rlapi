@@ -51,9 +51,9 @@ type ClaimEntitlementsResponse struct {
 }
 
 // GetMTXCatalog retrieves the DLC catalog (eg, starter packs).
-func (p *PsyNetRPC) GetMTXCatalog(ctx context.Context, playerID PlayerID, category string) (*GetCatalogResponse, error) {
+func (p *PsyNetRPC) GetMTXCatalog(ctx context.Context, category string) (*GetCatalogResponse, error) {
 	request := GetCatalogRequest{
-		PlayerID: playerID,
+		PlayerID: p.localPlayerID,
 		Category: category,
 	}
 
@@ -66,10 +66,10 @@ func (p *PsyNetRPC) GetMTXCatalog(ctx context.Context, playerID PlayerID, catego
 }
 
 // StartMTXPurchase initiates a DLC purchase via EGS.
-func (p *PsyNetRPC) StartMTXPurchase(ctx context.Context, playerID PlayerID, cartItems []MTXCartItem) error {
+func (p *PsyNetRPC) StartMTXPurchase(ctx context.Context, cartItems []MTXCartItem) error {
 	request := StartPurchaseRequest{
 		Language:  "INT",
-		PlayerID:  playerID,
+		PlayerID:  p.localPlayerID,
 		CartItems: cartItems,
 	}
 
@@ -81,9 +81,9 @@ func (p *PsyNetRPC) StartMTXPurchase(ctx context.Context, playerID PlayerID, car
 	return nil
 }
 
-func (p *PsyNetRPC) ClaimMTXEntitlements(ctx context.Context, playerID PlayerID, authCode string) ([]interface{}, error) {
+func (p *PsyNetRPC) ClaimMTXEntitlements(ctx context.Context, authCode string) ([]interface{}, error) {
 	request := ClaimEntitlementsRequest{
-		PlayerID: playerID,
+		PlayerID: p.localPlayerID,
 		AuthCode: authCode,
 	}
 
