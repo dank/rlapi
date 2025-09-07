@@ -2,46 +2,19 @@ package rlapi
 
 import "context"
 
-// BanMessage represents a ban message for a player
-type BanMessage struct {
-	PlayerID    PlayerID `json:"PlayerID"`
-	BanType     string   `json:"BanType"`
-	BanReason   string   `json:"BanReason"`
-	StartTime   int64    `json:"StartTime"`
-	EndTime     *int64   `json:"EndTime"`
-	Description string   `json:"Description"`
+type PlayerData struct {
+	PlayerID      string `json:"PlayerID"`
+	PlayerName    string `json:"PlayerName"`
+	PresenceState string `json:"PresenceState"`
+	PresenceInfo  string `json:"PresenceInfo"`
 }
 
-// PlayerProfile represents a player's profile information
-type PlayerProfile struct {
-	PlayerID          PlayerID               `json:"PlayerID"`
-	PlayerName        string                 `json:"PlayerName"`
-	Avatar            PlayerAvatar           `json:"Avatar"`
-	Platform          string                 `json:"Platform"`
-	PrimaryTitle      *string                `json:"PrimaryTitle"`
-	SeasonRewardLevel int                    `json:"SeasonRewardLevel"`
-	XPLevel           int                    `json:"XPLevel"`
-	TotalXP           int64                  `json:"TotalXP"`
-	Stats             map[string]interface{} `json:"Stats"`
-	CreatedTime       int64                  `json:"CreatedTime"`
-	LastSeenTime      *int64                 `json:"LastSeenTime"`
-}
-
-// PlayerAvatar represents a player's avatar information
-type PlayerAvatar struct {
-	AvatarURL *string `json:"AvatarURL"`
-	BorderURL *string `json:"BorderURL"`
-	AvatarID  *string `json:"AvatarID"`
-	BorderID  *string `json:"BorderID"`
-}
-
-// PlayerXP represents a player's XP information
-type PlayerXP struct {
-	PlayerID      PlayerID `json:"PlayerID"`
-	Level         int      `json:"Level"`
-	CurrentXP     int      `json:"CurrentXP"`
-	XPToNextLevel int      `json:"XPToNextLevel"`
-	TotalXP       int64    `json:"TotalXP"`
+type PlayerXPInfo struct {
+	TotalXP                  int    `json:"TotalXP"`
+	XPLevel                  int    `json:"XPLevel"`
+	XPTitle                  string `json:"XPTitle"`
+	XPProgressInCurrentLevel int    `json:"XPProgressInCurrentLevel"`
+	XPRequiredForNextLevel   int    `json:"XPRequiredForNextLevel"`
 }
 
 // CreatorCode represents a creator code information
@@ -62,15 +35,15 @@ type GetBanStatusRequest struct {
 }
 
 type GetBanStatusResponse struct {
-	BanMessages []BanMessage `json:"BanMessages"`
+	BanMessages []interface{} `json:"BanMessages"`
 }
 
 type GetProfileRequest struct {
-	PlayerID PlayerID `json:"PlayerID"`
+	PlayerIDs []PlayerID `json:"PlayerIDs"`
 }
 
 type GetProfileResponse struct {
-	Profile PlayerProfile `json:"Profile"`
+	PlayerData []PlayerData `json:"PlayerData"`
 }
 
 type GetXPRequest struct {
@@ -78,7 +51,7 @@ type GetXPRequest struct {
 }
 
 type GetXPResponse struct {
-	XP PlayerXP `json:"XP"`
+	XPInfoResponse PlayerXPInfo `json:"XPInfoResponse"`
 }
 
 type GetCreatorCodeRequest struct {
@@ -86,16 +59,19 @@ type GetCreatorCodeRequest struct {
 }
 
 type GetCreatorCodeResponse struct {
-	CreatorCode *CreatorCode `json:"CreatorCode"`
+	CreatorCode interface{} `json:"CreatorCode"`
 }
 
 type ReportRequest struct {
-	ReporterID  PlayerID `json:"ReporterID"`
-	ReportedID  PlayerID `json:"ReportedID"`
-	ReasonID    int      `json:"ReasonID"`
-	Description string   `json:"Description"`
-	GameID      *string  `json:"GameID,omitempty"`
-	MatchID     *string  `json:"MatchID,omitempty"`
+	Reports []Report `json:"Reports"`
+	GameID  string   `json:"GameID"`
+}
+
+type Report struct {
+	Reporter        PlayerID `json:"Reporter"`
+	Offender        PlayerID `json:"Offender"`
+	ReasonIDs       []int    `json:"ReasonIDs"`
+	ReportTimestamp float64  `json:"ReportTimestamp"`
 }
 
 type ReportResponse struct {
@@ -104,8 +80,8 @@ type ReportResponse struct {
 	Message  string `json:"Message"`
 }
 
-// GetBanStatus retrieves ban status information for specified players.
-func (p *PsyNetRPC) GetBanStatus(ctx context.Context, playerIDs []PlayerID) (*GetBanStatusResponse, error) {
+// GetBanStatus retrieves ban status information for given players.
+func (p *PsyNetRPC) GetBanStatus(ctx context.Context, playerIDs []PlayerID) ([]interface{}, error) {
 	request := GetBanStatusRequest{
 		Players: playerIDs,
 	}
@@ -115,13 +91,13 @@ func (p *PsyNetRPC) GetBanStatus(ctx context.Context, playerIDs []PlayerID) (*Ge
 	if err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return result.BanMessages, nil
 }
 
-// GetProfile retrieves profile information for a specific player.
-func (p *PsyNetRPC) GetProfile(ctx context.Context, playerID PlayerID) (*GetProfileResponse, error) {
+// GetProfiles retrieves profile information for given players.
+func (p *PsyNetRPC) GetProfiles(ctx context.Context, playerIDs []PlayerID) ([]PlayerData, error) {
 	request := GetProfileRequest{
-		PlayerID: playerID,
+		PlayerIDs: playerIDs,
 	}
 
 	var result GetProfileResponse
@@ -129,11 +105,11 @@ func (p *PsyNetRPC) GetProfile(ctx context.Context, playerID PlayerID) (*GetProf
 	if err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return result.PlayerData, nil
 }
 
-// GetXP retrieves XP information for a specific player.
-func (p *PsyNetRPC) GetXP(ctx context.Context, playerID PlayerID) (*GetXPResponse, error) {
+// GetXP retrieves XP information for the authenticated player.
+func (p *PsyNetRPC) GetXP(ctx context.Context, playerID PlayerID) (*PlayerXPInfo, error) {
 	request := GetXPRequest{
 		PlayerID: playerID,
 	}
@@ -143,38 +119,30 @@ func (p *PsyNetRPC) GetXP(ctx context.Context, playerID PlayerID) (*GetXPRespons
 	if err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return &result.XPInfoResponse, nil
 }
 
-// GetCreatorCode retrieves creator code information for a specific player.
-func (p *PsyNetRPC) GetCreatorCode(ctx context.Context, playerID PlayerID) (*GetCreatorCodeResponse, error) {
-	request := GetCreatorCodeRequest{
-		PlayerID: playerID,
-	}
-
+// GetCreatorCode retrieves creator code information for the authenticated player.
+func (p *PsyNetRPC) GetCreatorCode(ctx context.Context) (interface{}, error) {
 	var result GetCreatorCodeResponse
-	err := p.sendRequestSync(ctx, "Players/GetCreatorCode v1", request, &result)
+	err := p.sendRequestSync(ctx, "Players/GetCreatorCode v1", emptyRequest{}, &result)
 	if err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return &result.CreatorCode, nil
 }
 
-// Report reports a player for inappropriate behavior.
-func (p *PsyNetRPC) Report(ctx context.Context, reporterID, reportedID PlayerID, reasonID int, description string, gameID, matchID *string) (*ReportResponse, error) {
+// ReportPlayer reports a player.
+func (p *PsyNetRPC) ReportPlayer(ctx context.Context, reports []Report, gameID string) error {
 	request := ReportRequest{
-		ReporterID:  reporterID,
-		ReportedID:  reportedID,
-		ReasonID:    reasonID,
-		Description: description,
-		GameID:      gameID,
-		MatchID:     matchID,
+		Reports: reports,
+		GameID:  gameID,
 	}
 
-	var result ReportResponse
+	var result interface{}
 	err := p.sendRequestSync(ctx, "Players/Report v4", request, &result)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return &result, nil
+	return nil
 }
