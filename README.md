@@ -5,7 +5,7 @@
 
 ### [ITEM SHOP DEMO](https://rl.guac.net)
 
-_rlapi_ is a reverse-engineered collection of Rocket League's internal APIs with a Go SDK. It provides a full end-to-end flow, from authentication to accessing the item shop, player stats, inventory, match history, replays, and more. This repository also contains resources for reverse engineering and analyzing Rocket League network traffic, serving as a foundation for further exploration. Not all endpoints are fully documented—do not ask about specific ones, as I probably don't know.
+_rlapi_ is a reverse engineered collection of Rocket League's internal APIs with a Go SDK. It provides a full end-to-end flow, from authentication to accessing the item shop, player stats, inventory, match history, replays, and more. This repository also contains resources for reverse engineering and analyzing Rocket League network traffic, serving as a foundation for further exploration. Not all endpoints are fully documented—do not ask about specific ones, as I probably don't know.
 
 ### Contributions
 All contributions are welcome! If you discover new endpoints, extend the Go SDK, or add additional functionality, please submit a PR.
@@ -41,7 +41,7 @@ The MITM proxy forwards both HTTP and WebSocket traffic to the official servers 
 Rocket League initially establishes a connection with the HTTP API before transitioning to a WebSocket connection. The client sends an EOS access token via HTTP and receives session credentials, the WebSocket endpoint URL, and any tokens required for further communication. The client then connects to the WebSocket using these tokens, allowing all subsequent API calls to occur over a persistent WebSocket connection.
 
 ### Signing
-All API requests and responses must include a `PsySig` header containing a Base64-encoded HMAC-SHA256 signature. The signing keys were reverse-engineered from the game binary and are XOR'd with a 4-byte pattern. To decrypt:
+All API requests and responses must include a `PsySig` header containing a Base64-encoded HMAC-SHA256 signature. The signing keys were reverse engineered from the game binary and are XOR'd with a 4-byte pattern. To decrypt:
 ```python
 # Raw IDA dump
 data = [0x36, 0xEA, 0x37, 0x0C, ...]  # 36 bytes total

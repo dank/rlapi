@@ -12,14 +12,14 @@ Collects rewards for a completed challenge.
 ```json5
 {
   "PlayerID": "<player id>",
-  "ID": 3751                           
+  "ID": 3751
 }
 ```
 
 ###### Response
 ```json5
 {
-  "Result": {}                          
+  "Result": {}
 }
 ```
 
@@ -31,8 +31,8 @@ Retrieves all available challenges for the authenticated player.
 ###### Request
 ```json5
 {
-  "Challenges": [],    
-  "Folders": []        
+  "Challenges": [],
+  "Folders": []
 }
 ```
 
@@ -46,8 +46,8 @@ Retrieves all available challenges for the authenticated player.
         "Title": "New Driver Challenge",
         "Description": "Complete the Basic Tutorial in the Training Playlist",
         "Sort": 0,
-        "GroupID": 8,           
-        "XPUnlockLevel": 0,    
+        "GroupID": 8,
+        "XPUnlockLevel": 0,
         "bIsRepeatable": false,
         "RepeatLimit": 0,
         "IconURL": "https://rl-cdn.psyonix.com/ChallengeIcons/Challenge_Play.jpg",
@@ -55,27 +55,27 @@ Retrieves all available challenges for the authenticated player.
         "BackgroundColor": 0,
         "Requirements": [
           {
-            "RequiredCount": 1 
+            "RequiredCount": 1
           }
         ],
         "Rewards": {
-          "XP": 0,            
-          "Currency": [],       
-          "Products": [        
+          "XP": 0,
+          "Currency": [],
+          "Products": [
             {
               "ID": "861",
               "ChallengeID": 387,
-              "ProductID": 29,  
+              "ProductID": 29,
               "InstanceID": null,
               "Attributes": [],
               "SeriesID": 861
             }
           ],
-          "Pips": 0          
+          "Pips": 0
         },
         "bAutoClaimRewards": false,
-        "bIsPremium": false,   
-        "UnlockChallengeIDs": [] 
+        "bIsPremium": false,
+        "UnlockChallengeIDs": []
       }
       // ... additional challenges
     ]
@@ -90,7 +90,7 @@ Retrieves progress information for specific challenges.
 ```json5
 {
   "PlayerID": "<player id>",
-  "ChallengeIDs": [387, 388, 389, 390]  
+  "ChallengeIDs": [387, 388, 389, 390]
 }
 ```
 
@@ -100,21 +100,21 @@ Retrieves progress information for specific challenges.
   "Result": {
     "ProgressData": [
       {
-        "ID": 387,                       
-        "CompleteCount": 1,            
-        "bIsHidden": false,             
-        "bNotifyCompleted": false,      
-        "bNotifyAvailable": false,       
-        "bNotifyNewInfo": false,     
-        "bRewardsAvailable": false,     
-        "bComplete": true,             
-        "RequirementProgress": [          
+        "ID": 387,
+        "CompleteCount": 1,
+        "bIsHidden": false,
+        "bNotifyCompleted": false,
+        "bNotifyAvailable": false,
+        "bNotifyNewInfo": false,
+        "bRewardsAvailable": false,
+        "bComplete": true,
+        "RequirementProgress": [
           {
-            "ProgressCount": 0,          
-            "ProgressChange": 0           
+            "ProgressCount": 0,
+            "ProgressChange": 0
           }
         ],
-        "ProgressResetTimeUTC": 0  
+        "ProgressResetTimeUTC": 0
       }
       // ... additional challenge progress data
     ]
@@ -138,25 +138,7 @@ Accepts a club invitation and joins the club.
 {
   "Result": {
     "ClubDetails": {
-      "ClubID": 123456,
-      "ClubName": "<club name>",
-      "ClubTag": "<tag>",
-      "PrimaryColor": 0,
-      "AccentColor": 0,
-      "EquippedTitle": "Club_Supersonic_Acrobatic_Battle_Cars",
-      "OwnerPlayerID": "<player id>",
-      "Members": [
-        // ... club member details (same structure as GetClubDetails)
-      ],
-      "Badges": [
-        {"Stat": "Goal", "Badge": 2}
-      ],
-      "Flags": [],
-      "bVerified": false,
-      "CreatedTime": 1750299549,
-      "LastUpdatedTime": 1750299580,
-      "NameLastUpdatedTime": 0,
-      "DeletedTime": 0
+      // ... same structure as GetPlayerClubDetails response
     }
   }
 }
@@ -168,10 +150,10 @@ Creates a new club with specified name, tag, and colors.
 ###### Request
 ```json5
 {
-  "ClubName": "My New Club",          
-  "ClubTag": "TAG",              
-  "PrimaryColor": 0,                 
-  "AccentColor": 0                 
+  "ClubName": "amongus",
+  "ClubTag": "TAG",
+  "PrimaryColor": 0,
+  "AccentColor": 0
 }
 ```
 
@@ -192,7 +174,7 @@ Retrieves detailed information about a specific club by ID.
 ###### Request
 ```json5
 {
-  "ClubID": 123456 
+  "ClubID": 1120447
 }
 ```
 
@@ -258,7 +240,7 @@ Retrieves detailed information about the club that a specific player belongs to.
 {
   "Result": {
     "ClubDetails": {
-      "ClubID": 30859631,
+      "ClubID": 1120447,
       "ClubName": "<club name>",
       "ClubTag": "<tag>",
       "PrimaryColor": 0,
@@ -271,22 +253,22 @@ Retrieves detailed information about the club that a specific player belongs to.
           "PlayerName": "<player name>",
           "EpicPlayerID": "<player id>",
           "EpicPlayerName": "<epic name>",
-          "RoleID": 1, 
-          "CreatedTime": 1750299549,    
-          "DeletedTime": 0,    
+          "RoleID": 1,
+          "CreatedTime": 1750299549,
+          "DeletedTime": 0,
           "PsyonixID": null
         }
         // ... additional members
       ],
-      "Badges": [ 
+      "Badges": [
         {
-          "Stat": "Goal",  
+          "Stat": "Goal",
           "Badge": 2
         }
         // ... additional badges
       ],
-      "Flags": [], 
-      "bVerified": false, 
+      "Flags": [],
+      "bVerified": false,
       "CreatedTime": 1750299549,
       "LastUpdatedTime": 1750299580,
       "NameLastUpdatedTime": 0,
@@ -329,6 +311,22 @@ Leaves the current club.
 ```
 
 #### Clubs/RejectClubInvite v1
+Rejects a club invitation.
+
+###### Request
+```json5
+{
+  "ClubID": 1120447
+}
+```
+
+###### Response
+```json5
+{
+  "Result": {}
+}
+```
+
 #### Clubs/UpdateClub v2
 Updates club settings like colors and other properties.
 
@@ -336,7 +334,7 @@ Updates club settings like colors and other properties.
 ```json5
 {
   "PrimaryColor": -10879077,
-  "AccentColor": 0 
+  "AccentColor": 0
 }
 ```
 
@@ -363,34 +361,34 @@ Retrieves club statistics and achievements for the authenticated player's club.
 {
   "Result": {
     "CareerStats": {
-      "TimePlayed": 181826, 
-      "Goal": 1736, 
-      "AerialGoal": 190, 
+      "TimePlayed": 181826,
+      "Goal": 1736,
+      "AerialGoal": 190,
       "LongGoal": 79,
-      "BackwardsGoal": 9,   
-      "OvertimeGoal": 60,  
-      "TurtleGoal": 3, 
-      "Assist": 931, 
+      "BackwardsGoal": 9,
+      "OvertimeGoal": 60,
+      "TurtleGoal": 3,
+      "Assist": 931,
       "Playmaker": 42,
       "Save": 1564,
-      "EpicSave": 406, 
-      "Savior": 144, 
-      "Shot": 4372, 
-      "Center": 5319, 
+      "EpicSave": 406,
+      "Savior": 144,
+      "Shot": 4372,
+      "Center": 5319,
       "Clear": 3608,
-      "AerialHit": 5578, 
-      "BicycleHit": 162, 
+      "AerialHit": 5578,
+      "BicycleHit": 162,
       "JuggleHit": 33,
-      "Demolish": 1048, 
+      "Demolish": 1048,
       "Demolition": 0,
-      "FirstTouch": 2121, 
+      "FirstTouch": 2121,
       "PoolShot": 6,
-      "LowFive": 20, 
-      "HighFive": 1, 
-      "BreakoutDamage": 0, 
+      "LowFive": 20,
+      "HighFive": 1,
+      "BreakoutDamage": 0,
       "BreakoutDamageLarge": 0,
-      "HoopsSwishGoal": 4, 
-      "MatchPlayed": 662, 
+      "HoopsSwishGoal": 4,
+      "MatchPlayed": 662,
       "Win": 325
     },
     "SeasonalStats": [
@@ -398,7 +396,7 @@ Retrieves club statistics and achievements for the authenticated player's club.
         "Stat": "Goal",
         "Milestones": [225, 675, 2025],
         "Value": 1736,
-        "Badge": 2 
+        "Badge": 2
       }
     ],
     "PreviousSeasonalBadges": [],
@@ -430,10 +428,10 @@ Retrieves available trade-in categories and their eligible item series.
         "ID": 1,
         "Label": "Core Items",
         "SeriesIDs": [1, 47, 191, 207, 300, 443, 541, 542, 635, 902],
-        "bBlueprint": false, 
+        "bBlueprint": false,
         "TradeInQualities": [
           "Uncommon",
-          "Rare", 
+          "Rare",
           "VeryRare",
           "Import",
           "Exotic"
@@ -490,7 +488,7 @@ Retrieves ping measurements to available game server regions.
   "Result": {
     "Regions": [
       {
-        "Region": "USE", 
+        "Region": "USE",
         "Label": "US-East",
         "SubRegions": ["USE1", "USE3"]
       },
@@ -512,7 +510,7 @@ Retrieves ping measurements to available game server regions.
 
 ### Matches
 #### Matches/GetMatchHistory v1
-Retrieves recent match history for a specific player including match details, player stats, and replay URLs.
+Retrieves recent match history for the authenticated player.
 
 ###### Request
 ```json5
@@ -531,7 +529,7 @@ Retrieves recent match history for a specific player including match details, pl
         "Match": {
           "MatchGUID": "<guid>",
           "RecordStartTimestamp": 1756529579,
-          "MapName": "Wasteland_P", 
+          "MapName": "Wasteland_P",
           "Playlist": 6,
           "SecondsPlayed": 14.9421,
           "OvertimeSecondsPlayed": 0,
@@ -542,7 +540,7 @@ Retrieves recent match history for a specific player including match details, pl
           "bNoContest": false,
           "bForfeit": false,
           "CustomMatchCreatorPlayerID": "<player id>",
-          "bClubVsClub": false, 
+          "bClubVsClub": false,
           "Mutators": [""],
           "Players": [
             {
@@ -554,7 +552,7 @@ Retrieves recent match history for a specific player including match details, pl
               "PartyLeaderID": "<player id>",
               "InParty": false,
               "bAbandoned": false,
-              "bMvp": false, 
+              "bMvp": false,
               "LastTeam": 1,
               "TeamColor": "Orange",
               "SecondsPlayed": 0,
@@ -562,18 +560,18 @@ Retrieves recent match history for a specific player including match details, pl
               "Goals": 0,
               "Assists": 0,
               "Saves": 0,
-              "Shots": 0, 
-              "Demolishes": 0, 
+              "Shots": 0,
+              "Demolishes": 0,
               "OwnGoals": 0,
               "Skills": {
-                "Mu": null,         
-                "Sigma": null,           
-                "Division": null,     
-                "PrevMu": null,       
-                "PrevSigma": null,   
-                "PrevTier": null,       
-                "PrevDivision": null,     
-                "bValid": false   
+                "Mu": null,
+                "Sigma": null,
+                "Division": null,
+                "PrevMu": null,
+                "PrevSigma": null,
+                "PrevTier": null,
+                "PrevDivision": null,
+                "bValid": false
               }
             }
           ]
@@ -606,7 +604,7 @@ Searches for available private matches in a specific region and playlist.
 ###### Request
 ```json5
 {
-  "Region": "USE1", 
+  "Region": "USE1",
   "PlaylistID": 6
 }
 ```
@@ -625,19 +623,19 @@ Initiates matchmaking for specified playlists and regions.
 {
   "Regions": [
     {
-      "Name": "USE1", 
-      "Ping": 33  
+      "Name": "USE1",
+      "Ping": 33
     },
     {
-      "Name": "USE3", 
+      "Name": "USE3",
       "Ping": 33
     }
   ],
-  "Playlists": [11],     
-  "SecondsSearching": 1,  
-  "CurrentServerID": "",  
+  "Playlists": [11],
+  "SecondsSearching": 1,
+  "CurrentServerID": "",
   "bDisableCrossplay": false,
-  "PartyID": "<party id>", 
+  "PartyID": "<party id>",
   "PartyMembers": [
     "<player id>"
   ]
@@ -648,7 +646,7 @@ Initiates matchmaking for specified playlists and regions.
 ```json5
 {
   "Result": {
-    "EstimatedQueueTime": 32 
+    "EstimatedQueueTime": 32
   }
 }
 ```
@@ -662,7 +660,7 @@ Retrieves available starter packs for purchase.
 ```json5
 {
   "PlayerID": "<player id>",
-  "Category": "StarterPack" 
+  "Category": "StarterPack"
 }
 ```
 
@@ -680,14 +678,14 @@ Retrieves available starter packs for purchase.
         "ImageURL": "",
         "PlatformProductID": "<product id>",
         "bIsOwned": false,
-        "Items": [         
+        "Items": [
           {
             "ProductID": 4284,
             "InstanceID": null,
             "Attributes": [
               {
                 "Key": "Painted",
-                "Value": "9"  
+                "Value": "9"
               }
             ],
             "SeriesID": 8365
@@ -713,12 +711,12 @@ Initiates a purchase transaction for catalog items.
 ###### Request
 ```json5
 {
-  "Language": "INT",  
+  "Language": "INT",
   "PlayerID": "<player id>",
-  "CartItems": [ 
+  "CartItems": [
     {
-      "CatalogID": 13, 
-      "Count": 1  
+      "CatalogID": 13,
+      "Count": 1
     }
   ]
 }
@@ -732,7 +730,7 @@ Changes the owner of a party to another member.
 ```json5
 {
   "NewOwnerID": "<player id>",
-  "PartyID": "<party id>" 
+  "PartyID": "<party id>"
 }
 ```
 
@@ -749,7 +747,7 @@ Creates a new party.
 ###### Request
 ```json5
 {
-  "bForcePartyonix": true 
+  "bForcePartyonix": true
 }
 ```
 
@@ -757,8 +755,10 @@ Creates a new party.
 ```json5
 {
   "Result": {
-    "PartyID": "<party id>"
-    // ... additional party details
+    "PartyID": "<party id>",
+    "CreatedAt": 1750299549,
+    "CreatedByUserID": 1750299549,
+    "JoinID": "<join id>"
   }
 }
 ```
@@ -775,7 +775,7 @@ Retrieves current party information and pending invitations for the authenticate
 ```json5
 {
   "Result": {
-    "Invites": [] 
+    "Invites": []
   }
 }
 ```
@@ -786,8 +786,8 @@ Joins an existing party.
 ###### Request
 ```json5
 {
-  "JoinID": "",            
-  "PartyID": "<party id>" 
+  "JoinID": "",
+  "PartyID": "<party id>"
 }
 ```
 
@@ -795,7 +795,7 @@ Joins an existing party.
 ```json5
 {
   "Result": {
-    // ... party details
+    // ... same structure as CreateParty response
   }
 }
 ```
@@ -806,16 +806,16 @@ Kicks members from a party (owner only).
 ###### Request
 ```json5
 {
-  "Members": ["<player id>"], 
-  "KickReason": 1,           
-  "PartyID": "<party id>" 
+  "Members": ["<player id>"],
+  "KickReason": 1,
+  "PartyID": "<party id>"
 }
 ```
 
 ###### Response
 ```json5
 {
-  "Result": {}                      
+  "Result": {}
 }
 ```
 
@@ -825,14 +825,14 @@ Leaves the current party.
 ###### Request
 ```json5
 {
-  "PartyID": "<party id>"   
+  "PartyID": "<party id>"
 }
 ```
 
 ###### Response
 ```json5
 {
-  "Result": {}  
+  "Result": {}
 }
 ```
 
@@ -842,8 +842,8 @@ Sends a text chat message to party members.
 ###### Request
 ```json5
 {
-  "Message": "among us", 
-  "PartyID": "<party id>" 
+  "Message": "amongus",
+  "PartyID": "<party id>"
 }
 ```
 
@@ -860,7 +860,7 @@ Sends a party invitation to another player.
 ###### Request
 ```json5
 {
-  "InviteeID": "<player id>", 
+  "InviteeID": "<player id>",
   "PartyID": "<party id>"
 }
 ```
@@ -868,7 +868,7 @@ Sends a party invitation to another player.
 ###### Response
 ```json5
 {
-  "Result": {} 
+  "Result": {}
 }
 ```
 
@@ -890,7 +890,7 @@ Sends a request to join another player's party.
 ```
 
 #### Party/SendPartyMessage v1
-Sends a voice message (?) to party members.
+Sends an encoded message (?) to party members.
 
 ###### Request
 ```json5
@@ -914,7 +914,7 @@ Retrieves ban status information for specified players.
 ###### Request
 ```json5
 {
-  "Players": ["<player id>"] 
+  "Players": ["<player id>"]
 }
 ```
 
@@ -930,18 +930,8 @@ Retrieves ban status information for specified players.
 #### Players/GetCreatorCode v1
 Retrieves the player's creator code information.
 
-###### Request
-```json5
-{}
-```
-
-###### Response
-```json5
-{}
-```
-
 #### Players/GetProfile v1
-Retrieves basic profile information and presence status for multiple players.
+Retrieves basic profile information and presence status for multiple players. Works with any valid player ID.
 
 ###### Request
 ```json5
@@ -985,17 +975,17 @@ Retrieves the authenticated player's XP level and progress information.
 {
   "Result": {
     "XPInfoResponse": {
-      "TotalXP": 12345,   
-      "XPLevel": 123,  
-      "XPTitle": "",                    
-      "XPProgressInCurrentLevel": 123, 
-      "XPRequiredForNextLevel": 123   
+      "TotalXP": 12345,
+      "XPLevel": 123,
+      "XPTitle": "",
+      "XPProgressInCurrentLevel": 123,
+      "XPRequiredForNextLevel": 123
     }
   }
 }
 ```
 #### Players/Report v4
-Reports a player for misconduct.
+Reports a player.
 
 ###### Request
 ```json5
@@ -1004,11 +994,11 @@ Reports a player for misconduct.
     {
       "Reporter": "<player id>",
       "Offender": "<player id>",
-      "ReasonIDs": [3],  
+      "ReasonIDs": [3],
       "ReportTimeStamp": 0.0
     }
   ],
-  "GameID": "" 
+  "GameID": ""
 }
 ```
 
@@ -1021,7 +1011,7 @@ Reports a player for misconduct.
 
 ### Playlists
 #### Playlists/GetActivePlaylists v1
-Retrieves all currently available playlists (casual and ranked) with their availability windows.
+Retrieves all available playlists.
 
 ###### Request
 ```json5
@@ -1035,14 +1025,14 @@ Retrieves all currently available playlists (casual and ranked) with their avail
     "CasualPlaylists": [
       {
         "NodeID": "OnesCasual",
-        "Playlist": 1, 
+        "Playlist": 1,
         "Type": 1,
         "StartTime": null,
         "EndTime": null
       },
       {
         "NodeID": "ArcadeCasual1",
-        "Playlist": 50, 
+        "Playlist": 50,
         "Type": 3,
         "StartTime": 1756310400,
         "EndTime": 1757001600
@@ -1059,7 +1049,7 @@ Retrieves all currently available playlists (casual and ranked) with their avail
       }
       // ... additional ranked playlists
     ],
-    "XPLevelUnlocked": 20 
+    "XPLevelUnlocked": 20
   }
 }
 ```
@@ -1079,7 +1069,7 @@ Retrieves current player counts across all playlists.
   "Result": {
     "Playlists": [
       {
-        "Playlist": 10,  
+        "Playlist": 10,
         "PlayerCount": 10615
       },
       {
@@ -1117,14 +1107,38 @@ Updates the player's current playlist for population tracking.
 ### Products
 #### Products/CrossEntitlement/GetProductStatus v1
 #### Products/GetContainerDropTable v2
+Retrieves the drop table for containers.
+
+###### Request
+```json5
+{}
+```
+
+###### Response
+```json5
+{
+  "Result": {
+    "ContainerDrops":[
+      {
+        "ProductID": 1009,
+        "SeriesID": 2,
+        "Drops": [
+          // ... same structure as GetPlayerProducts response
+        ]
+      }
+      // ... additional containers
+    ]
+  }
+}
+```
 #### Products/GetPlayerProducts v2
-Retrieves a player's inventory including all owned items with their attributes and metadata.
+Retrieves a player's inventory.
 
 ###### Request
 ```json5
 {
   "PlayerID": "<player id>",
-  "UpdatedTimestamp": "<timestamp>" 
+  "UpdatedTimestamp": "<timestamp>"
 }
 ```
 
@@ -1139,7 +1153,7 @@ Retrieves a player's inventory including all owned items with their attributes a
         "Attributes": [
           {
             "Key": "Painted",
-            "Value": 11 
+            "Value": 11
           },
           {
             "Key": "Quality",
@@ -1185,7 +1199,9 @@ Trades in multiple items for a higher-tier item.
 ```json5
 {
   "Result": {
-    // TODO: Received item details from trade-in
+    "Drops":[
+      // ... same structure as GetPlayerProducts response
+    ]
   }
 }
 ```
@@ -1198,7 +1214,7 @@ Unlocks/opens loot containers to receive items.
 {
   "PlayerID": "<player id>",
   "InstanceIDs": ["90a79f045cad4556b95eea1270be0e76"],
-  "KeyInstanceIDs": []    
+  "KeyInstanceIDs": []
 }
 ```
 
@@ -1206,7 +1222,9 @@ Unlocks/opens loot containers to receive items.
 ```json5
 {
   "Result": {
-    // TODO: Items received from opening containers
+    "Drops": [
+      // ... same structure as GetPlayerProducts response
+    ]
   }
 }
 ```
@@ -1219,7 +1237,7 @@ Retrieves all available server regions and their sub-regions.
 ```json5
 {
   "RequestRegions": [],
-  "Regions": []  
+  "Regions": []
 }
 ```
 
@@ -1229,8 +1247,8 @@ Retrieves all available server regions and their sub-regions.
   "Result": {
     "Regions": [
       {
-        "Region": "USE", 
-        "Label": "US-East", 
+        "Region": "USE",
+        "Label": "US-East",
         "SubRegions": ["USE1", "USE3"]
       },
       {
@@ -1256,9 +1274,9 @@ Join a private match by server name and password.
 ###### Request
 ```json5
 {
-  "JoinType": "JoinPrivate", 
-  "ServerName": "<server name>", 
-  "Password": "<password>" 
+  "JoinType": "JoinPrivate",
+  "ServerName": "<server name>",
+  "Password": "<password>"
 }
 ```
 
@@ -1270,8 +1288,8 @@ Retrieves the authenticated player's Rocket Pass progress and available purchase
 ```json5
 {
   "PlayerID": "<player id>",
-  "RocketPassID": 25, 
-  "RocketPassInfo": {}, 
+  "RocketPassID": 25,
+  "RocketPassInfo": {},
   "RocketPassStore": {}
 }
 ```
@@ -1281,32 +1299,32 @@ Retrieves the authenticated player's Rocket Pass progress and available purchase
 {
   "Result": {
     "StartTime": 1750258800,
-    "EndTime": 1758031200, 
+    "EndTime": 1758031200,
     "RocketPassInfo": {
-      "TierLevel": 74,  
-      "bOwnsPremium": false, 
-      "XPMultiplier": 0, 
-      "Pips": 730,   
-      "PipsPerLevel": 10     
+      "TierLevel": 74,
+      "bOwnsPremium": false,
+      "XPMultiplier": 0,
+      "Pips": 730,
+      "PipsPerLevel": 10
     },
     "RocketPassStore": {
-      "Tiers": [ 
+      "Tiers": [
         {
           "PurchasableID": 144,
-          "CurrencyID": 13,   
-          "CurrencyCost": 200,  
+          "CurrencyID": 13,
+          "CurrencyCost": 200,
           "OriginalCurrencyCost": null,
-          "Tiers": 1,  
-          "Savings": 0,    
+          "Tiers": 1,
+          "Savings": 0,
           "ImageUrl": null
         }
         // ... additional tier skip options
       ],
-      "Bundles": [  
+      "Bundles": [
         {
           "PurchasableID": 142,
           "CurrencyID": 13,
-          "CurrencyCost": 1000, 
+          "CurrencyCost": 1000,
           "OriginalCurrencyCost": null,
           "Tiers": 0,
           "Savings": 0,
@@ -1334,7 +1352,19 @@ Retrieves prestige rewards for a player in the specified Rocket Pass.
 ```json5
 {
   "Result": {
-    // TODO: Prestige reward information
+    "PrestigeRewards": [
+      {
+        "Tier": 71,
+        "ProductData": [
+          // ... same structure as GetPlayerProducts response
+        ],
+        "RewardDrops": [],
+        "CurrencyDrops": [],
+        "ContainerDrops": [],
+        "ItemSetDrops": []
+      }
+      // ... additional prestige rewards
+    ]
   }
 }
 ```
@@ -1348,7 +1378,7 @@ Retrieves reward content and tier information for a Rocket Pass.
   "RocketPassID": 25,
   "TierCap": 0,
   "FreeMaxLevel": 0,
-  "PremiumMaxLevel": 0 
+  "PremiumMaxLevel": 0
 }
 ```
 
@@ -1356,7 +1386,15 @@ Retrieves reward content and tier information for a Rocket Pass.
 ```json5
 {
   "Result": {
-    // TODO: Rocket Pass reward content and tiers
+    "TierCap": 70,
+    "FreeMaxLevel": 307,
+    "PremiumMaxLevel": 307,
+    "FreeRewards": [
+      // ... same structure as GetPlayerPrestigeRewards response
+    ],
+    PremiumRewards: [
+      // ... same structure as GetPlayerPrestigeRewards response
+    ]
   }
 }
 ```
@@ -1378,11 +1416,11 @@ Retrieves the authenticated player's currency balances (credits, tokens, etc.).
   "Result": {
     "Currencies": [
       {
-        "ID": 13, 
-        "Amount": 0,  
+        "ID": 13,
+        "Amount": 0,
         "ExpirationTime": null,
         "UpdatedTimestamp": 1752883359,
-        "IsTradable": false, 
+        "IsTradable": false,
         "TradeHold": null
       }
     ]
@@ -1390,7 +1428,7 @@ Retrieves the authenticated player's currency balances (credits, tokens, etc.).
 }
 ```
 #### Shops/GetShopCatalogue v2
-Retrieves available items and their prices from specified shop catalogues.
+Retrieves available items and their prices from specified shop IDs.
 
 ###### Request
 ```json5
@@ -1409,11 +1447,11 @@ Retrieves available items and their prices from specified shop catalogues.
         "ShopItems": [
           {
             "ShopItemID": 12387,
-            "StartDate": 1756771200, 
-            "EndDate": 1757203200,  
+            "StartDate": 1756771200,
+            "EndDate": 1757203200,
             "MaxQuantityPerPlayer": 1,
             "ImageURL": null,
-            "DeliverableProducts": [ 
+            "DeliverableProducts": [
               {
                 "Count": 1,
                 "Product": {
@@ -1437,8 +1475,8 @@ Retrieves available items and their prices from specified shop catalogues.
                 "EndDate": 1757203200,
                 "Price": [
                   {
-                    "ID": 13, 
-                    "Amount": 1500  
+                    "ID": 13,
+                    "Amount": 1500
                   }
                 ],
                 "SortID": 1,
@@ -1471,13 +1509,23 @@ Retrieves shop-related notifications and alerts.
 ```json5
 {
   "Result": {
-    // TODO: Shop notification data
+    "ShopNotifications": {
+      "ShopNotificationID": 51,
+      "ShopItemCostID": 23795,
+      "StartTime": 1756339200,
+      "EndTime": 1756771200,
+      "ImageURL": null,
+      "Title":"JACKAL + ONE-PUNCH MAN",
+      "DeliverableProducts": [
+        // ... same structure as GetShopCatalogue response
+      ]
+    }
   }
 }
 ```
 
 #### Shops/GetStandardShops v1
-Retrieves information about standard/permanent shop offerings.
+Retrieves information about item shops.
 
 ###### Request
 ```json5
@@ -1488,14 +1536,25 @@ Retrieves information about standard/permanent shop offerings.
 ```json5
 {
   "Result": {
-    // TODO: Standard shop information
+    "Shops": [
+      {
+        "ID": 52,
+        "Type": "Featured",
+        "StartDate": 1568070623,
+        "EndDate": null,
+        "LogoURL": null,
+        "Name": "Featured Shop",
+        "Title": null
+      }
+      // ... additional shops
+    ]
   }
 }
 ```
 
 ### Skills
 #### Skills/GetPlayerSkill v1
-Retrieves skill data (rank, MMR, etc.) for a specific player across all playlists.
+Retrieves skill data (rank, MMR, etc.) for a specific player across all playlists. Works with any valid player ID.
 
 ###### Request
 ```json5
@@ -1511,12 +1570,12 @@ Retrieves skill data (rank, MMR, etc.) for a specific player across all playlist
     "Skills": [
       {
         "Playlist": 10,
-        "Mu": 30.4646,  
+        "Mu": 30.4646,
         "Sigma": 2.5,
-        "Tier": 11,  
+        "Tier": 11,
         "Division": 1,
         "MMR": 30.4646,
-        "WinStreak": 3, 
+        "WinStreak": 3,
         "MatchesPlayed": 81,
         "PlacementMatchesPlayed": 10
       }
@@ -1531,12 +1590,12 @@ Retrieves skill data (rank, MMR, etc.) for a specific player across all playlist
 ```
 
 #### Skills/GetPlayersSkills v1
-Retrieves skill data for multiple players.
+Retrieves skill data for multiple players. Works with any valid player ID.
 
 ###### Request
 ```json5
 {
-  "PlayerIDs": ["<player id>"] 
+  "PlayerIDs": ["<player id>"]
 }
 ```
 
@@ -1544,7 +1603,9 @@ Retrieves skill data for multiple players.
 ```json5
 {
   "Result": {
-    // TODO: Skills data for each requested player (same format as GetPlayerSkill)
+    "Skills": [
+      // ... same structure as GetPlayerSkill response
+    ]
   }
 }
 ```
@@ -1555,8 +1616,8 @@ Retrieves skill-based leaderboard for a specific playlist.
 ###### Request
 ```json5
 {
-  "Playlist": 10,   
-  "bDisableCrossplay": false  
+  "Playlist": 10,
+  "bDisableCrossplay": false
 }
 ```
 
@@ -1564,7 +1625,22 @@ Retrieves skill-based leaderboard for a specific playlist.
 ```json5
 {
   "Result": {
-    // TODO: Skill leaderboard data for the playlist
+    "LeaderboardID": "Skill10",
+    "Platforms": [
+      {
+        "Platform": "Epic",
+        "Players": [
+          {
+            "PlayerID": "Epic|6ea3d3d4f992494dacd7f757ff4e2b1a|0",
+            "PlayerName": "mawkzy",
+            "MMR": 81.8645,
+            "Value": 22
+          }
+          // ... additional players
+        ] 
+      }
+      // ... additional platforms
+    ]
   }
 }
 ```
@@ -1575,7 +1651,7 @@ Retrieves leaderboard ranks for specific players in a playlist.
 ###### Request
 ```json5
 {
-  "Playlist": 30, 
+  "Playlist": 30,
   "PlayerIDs": [
     "<player id>"
   ]
@@ -1586,7 +1662,10 @@ Retrieves leaderboard ranks for specific players in a playlist.
 ```json5
 {
   "Result": {
-    // TODO: Leaderboard rank data for each requested player
+    "Playlist": 30,
+    "PlayerIDs": [
+      // ... player ids
+    ]
   }
 }
 ```
@@ -1606,7 +1685,10 @@ Retrieves leaderboard value/position for a specific player.
 ```json5
 {
   "Result": {
-    // TODO: Player's leaderboard position and value
+    "LeaderboardID": "Skill10",
+    "bHasSkill": true,
+    "MMR": 30.4646,
+    "Value": 11
   }
 }
 ```
@@ -1618,8 +1700,8 @@ Retrieves global leaderboard data for a specific statistic.
 ###### Request
 ```json5
 {
-  "Stat": "Wins", 
-  "bDisableCrossplay": false 
+  "Stat": "Wins",
+  "bDisableCrossplay": false
 }
 ```
 
@@ -1630,9 +1712,9 @@ Retrieves global leaderboard data for a specific statistic.
     "LeaderboardID": "Wins",
     "Platforms": [
       {
-        "Platform": "Epic", 
+        "Platform": "Epic",
         "Stat": "Wins",
-        "Players": [ 
+        "Players": [
           {
             "PlayerID": "<player id>",
             "PlayerName": "<player name>",
@@ -1643,7 +1725,7 @@ Retrieves global leaderboard data for a specific statistic.
       },
       {
         "Platform": "PS4",
-        "Stat": "Wins", 
+        "Stat": "Wins",
         "Players": [
           // ...
         ]
@@ -1660,11 +1742,11 @@ Retrieves leaderboard ranks for specific players in a stat category.
 ###### Request
 ```json5
 {
-  "Stat": "Wins", 
-  "PlayerIDs": [     
+  "Stat": "Wins",
+  "PlayerIDs": [
     "<player id>"
   ],
-  "bDisableCrossplay": false              // Whether to exclude crossplay results
+  "bDisableCrossplay": false
 }
 ```
 
@@ -1672,7 +1754,15 @@ Retrieves leaderboard ranks for specific players in a stat category.
 ```json5
 {
   "Result": {
-    // TODO: Stat leaderboard rank data for each requested player
+    "LeaderboardID": "Assists",
+    "Players":[
+      {
+        "PlayerID":  "<player id>",
+        "PlayerName": "<player name>",
+        "Value": 1234
+      }
+      // ... additional players
+    ]
   }
 }
 ```
@@ -1683,9 +1773,9 @@ Retrieves leaderboard value/position for a specific player in a stat category.
 ###### Request
 ```json5
 {
-  "Stat": "Wins",                   
+  "Stat": "Wins",
   "PlayerID": "<player id>",
-  "bDisableCrossplay": false  
+  "bDisableCrossplay": false
 }
 ```
 
@@ -1693,7 +1783,9 @@ Retrieves leaderboard value/position for a specific player in a stat category.
 ```json5
 {
   "Result": {
-    // TODO: Player's stat leaderboard position and value
+    "LeaderboardID": "Wins",
+    "bHasValue": true,
+    "Value": "123"
   }
 }
 ```
@@ -1706,10 +1798,10 @@ Registers the authenticated player for a tournament.
 ```json5
 {
   "PlayerID": "<player id>",
-  "TournamentID": "44289515", 
+  "TournamentID": "<tournament id>",
   "Credentials": {
-    "Title": "",  
-    "Password": ""     
+    "Title": "",
+    "Password": ""
   }
 }
 ```
@@ -1725,14 +1817,14 @@ Registers the authenticated player for a tournament.
       "CreatorPlayerID": "Steam|0|0",
       "StartTime": 1756850400,
       "GenerateBracketTime": null,
-      "MaxBracketSize": 32, 
+      "MaxBracketSize": 32,
       "RankMin": 0,
-      "RankMax": 22, 
-      "Region": "USC", 
+      "RankMax": 22,
+      "Region": "USC",
       "Platforms": ["Steam", "PS4", "XboxOne", "Switch", "Epic"],
       "GameTags": "",
-      "GameMode": 0, 
-      "GameModes": [], 
+      "GameMode": 0,
+      "GameModes": [],
       "TeamSize": 2,
       "MapSetName": null,
       "DisabledMaps": [
@@ -1744,8 +1836,8 @@ Registers the authenticated player for a tournament.
       "SeriesLength": 1,
       "FinalSeriesLength": 3,
       "SeriesRoundLengths": [3, 3, 1],
-      "SeedingType": 2, 
-      "TieBreaker": 0, 
+      "SeedingType": 2,
+      "TieBreaker": 0,
       "bPublic": false,
       "TeamsRegistered": 0,
       "ScheduleID": 39147,
@@ -1764,7 +1856,7 @@ Retrieves scheduled tournaments for a specific region.
 ```json5
 {
   "PlayerID": "<player id>",
-  "Region": "USE" 
+  "Region": "USE"
 }
 ```
 
@@ -1774,7 +1866,7 @@ Retrieves scheduled tournaments for a specific region.
   "Result": {
     "Schedules": [
       {
-        "Time": 1756843200, 
+        "Time": 1756843200,
         "ScheduleID": 39143,
         "bUpdateSkill": false,
         "Tournaments": [
@@ -1782,17 +1874,17 @@ Retrieves scheduled tournaments for a specific region.
             "ID": 44287528,
             "Title": "2v2 Pentathlon",
             "CreatorName": "Psyonix",
-            "CreatorPlayerID": "Steam|0|0", 
+            "CreatorPlayerID": "Steam|0|0",
             "StartTime": 1756843200,
             "GenerateBracketTime": null,
             "MaxBracketSize": 32,
-            "RankMin": 0, 
+            "RankMin": 0,
             "RankMax": 22,
             "Region": "USC",
             "Platforms": ["Steam", "PS4", "XboxOne", "Switch", "Epic"],
             "GameTags": "",
-            "GameMode": 27, 
-            "GameModes": [12, 25, 6, 8, 0], 
+            "GameMode": 27,
+            "GameModes": [12, 25, 6, 8, 0],
             "TeamSize": 2,
             "MapSetName": null,
             "DisabledMaps": [],
@@ -1829,17 +1921,17 @@ Retrieves tournament cycle information including weekly and seasonal data.
 ```json5
 {
   "Result": {
-    "CycleID": 19, 
-    "CycleEndTime": 1757916000,  
-    "WeekID": 11,  
-    "WeekEndTime": 1757311200,  
-    "WeeklyCurrencies": [], 
-    "Weeks": [        
+    "CycleID": 19,
+    "CycleEndTime": 1757916000,
+    "WeekID": 11,
+    "WeekEndTime": 1757311200,
+    "WeeklyCurrencies": [],
+    "Weeks": [
       {"Results": []},
       {"Results": []}
       // ... additional weeks
     ],
-    "TournamentCurrencyID": 35 
+    "TournamentCurrencyID": 35
   }
 }
 ```
@@ -1872,7 +1964,7 @@ Browses available training packs with filtering options.
 ###### Request
 ```json5
 {
-  // TODO: Request structure varies - can include filters for difficulty, creator, etc.
+  "bFeaturedOnly":true
 }
 ```
 
@@ -1882,16 +1974,16 @@ Browses available training packs with filtering options.
   "Result": {
     "TrainingData": [
       {
-        "Code": "4CA7-FADD-0DF1-AEC2", 
-        "TM_Name": "Diamond Pack May 2023", 
+        "Code": "4CA7-FADD-0DF1-AEC2",
+        "TM_Name": "Diamond Pack May 2023",
         "Type": 3,
-        "Difficulty": 2, 
-        "CreatorName": "Psyonix", 
-        "MapName": "cs_p", 
-        "Tags": [],     
+        "Difficulty": 2,
+        "CreatorName": "Psyonix",
+        "MapName": "cs_p",
+        "Tags": [],
         "NumRounds": 9,
-        "TM_Guid": "<guid>", 
-        "CreatedAt": 1683788495, 
+        "TM_Guid": "<guid>",
+        "CreatedAt": 1683788495,
         "UpdatedAt": 1756388418
       }
       // ... additional training packs
@@ -1915,20 +2007,7 @@ Retrieves metadata for specific training packs by their codes.
 {
   "Result": {
     "TrainingData": [
-      {
-        "Code": "2BFC-F8D6-22AC-2AFE",
-        "TM_Name": "Diamond Pack Nov 2024",
-        "Type": 3,
-        "Difficulty": 1,
-        "CreatorName": "Psyonix",
-        "CreatorPlayerID": "",
-        "MapName": "cs_p",
-        "Tags": [],
-        "NumRounds": 13,
-        "TM_Guid": "<guid>",
-        "CreatedAt": 1732585868,
-        "UpdatedAt": 1749745526
-      }
+      // ... same structure as BrowseTrainingData response
     ]
   }
 }
