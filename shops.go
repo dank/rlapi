@@ -157,9 +157,9 @@ func (p *PsyNetRPC) GetShopCatalogue(ctx context.Context, shopIDs []ShopID) (*Ge
 }
 
 // GetPlayerWallet retrieves the authenticated player's wallet information.
-func (p *PsyNetRPC) GetPlayerWallet(ctx context.Context, playerID PlayerID) (*GetPlayerWalletResponse, error) {
+func (p *PsyNetRPC) GetPlayerWallet(ctx context.Context) (*GetPlayerWalletResponse, error) {
 	var result GetPlayerWalletResponse
-	err := p.sendRequestSync(ctx, "Shops/GetPlayerWallet v1", GetPlayerWalletRequest{PlayerID: playerID}, &result)
+	err := p.sendRequestSync(ctx, "Shops/GetPlayerWallet v1", GetPlayerWalletRequest{PlayerID: p.localPlayerID}, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +169,7 @@ func (p *PsyNetRPC) GetPlayerWallet(ctx context.Context, playerID PlayerID) (*Ge
 // GetShopNotifications retrieves current shop notifications.
 func (p *PsyNetRPC) GetShopNotifications(ctx context.Context) (*GetShopNotificationsResponse, error) {
 	var result GetShopNotificationsResponse
-	err := p.sendRequestSync(ctx, "Shops/GetShopNotifications v1", map[string]interface{}{}, &result)
+	err := p.sendRequestSync(ctx, "Shops/GetShopNotifications v1", emptyRequest{}, &result)
 	if err != nil {
 		return nil, err
 	}

@@ -112,7 +112,7 @@ func TestPsyNetRPC_SendRequestSync(t *testing.T) {
 
 	// Create PsyNet instance and establish connection
 	psyNet := NewPsyNet()
-	rpc, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
+	rpc, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session", "test-player")
 	if err != nil {
 		t.Fatalf("Failed to establish socket: %v", err)
 	}
@@ -152,7 +152,7 @@ func TestPsyNetRPC_SendRequestAsync(t *testing.T) {
 
 	// Create PsyNet instance and establish connection
 	psyNet := NewPsyNet()
-	rpc, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
+	rpc, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session", "test-player")
 	if err != nil {
 		t.Fatalf("Failed to establish socket: %v", err)
 	}
@@ -196,7 +196,7 @@ func TestPsyNetRPC_ConcurrentRequests(t *testing.T) {
 
 	// Create PsyNet instance and establish connection
 	psyNet := NewPsyNet()
-	rpc, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
+	rpc, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session", "test-player")
 	if err != nil {
 		t.Fatalf("Failed to establish socket: %v", err)
 	}
@@ -264,7 +264,7 @@ func TestPsyNetRPC_FireAndForgetNoLeak(t *testing.T) {
 
 	// Create PsyNet instance and establish connection
 	psyNet := NewPsyNet()
-	rpc, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
+	rpc, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session", "test-player")
 	if err != nil {
 		t.Fatalf("Failed to establish socket: %v", err)
 	}
@@ -325,7 +325,7 @@ func TestPsyNetRPC_RawMessage(t *testing.T) {
 
 	// Create PsyNet instance and establish connection
 	psyNet := NewPsyNet()
-	rpc, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
+	rpc, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session", "test-player")
 	if err != nil {
 		t.Fatalf("Failed to establish socket: %v", err)
 	}
@@ -389,7 +389,7 @@ func TestPsyNetRPC_ConcurrentContextCancellation(t *testing.T) {
 
 	// Create PsyNet instance and establish connection
 	psyNet := NewPsyNet()
-	rpc, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
+	rpc, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session", "test-player")
 	if err != nil {
 		t.Fatalf("Failed to establish socket: %v", err)
 	}
@@ -577,7 +577,7 @@ func TestPsyNetRPC_IsConnected(t *testing.T) {
 	defer mockServer.Close()
 
 	psyNet := NewPsyNet()
-	rpc, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
+	rpc, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session", "test-player")
 	if err != nil {
 		t.Fatalf("Failed to establish socket: %v", err)
 	}
@@ -603,7 +603,7 @@ func TestPsyNetRPC_PingPongHandling(t *testing.T) {
 	defer mockServer.Close()
 
 	psyNet := NewPsyNet()
-	rpc, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session")
+	rpc, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session", "test-player")
 	if err != nil {
 		t.Fatalf("Failed to establish socket: %v", err)
 	}

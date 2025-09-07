@@ -121,10 +121,10 @@ func (p *PsyNetRPC) GetActiveChallenges(ctx context.Context) ([]Challenge, error
 	return result.Challenges, nil
 }
 
-// GetChallengeProgress retrieves a player's progression on challenges.
-func (p *PsyNetRPC) GetChallengeProgress(ctx context.Context, playerID PlayerID, challengeIDs []ChallengeID) ([]ChallengeProgress, error) {
+// GetChallengeProgress retrieves the authenticated player's progression on challenges.
+func (p *PsyNetRPC) GetChallengeProgress(ctx context.Context, challengeIDs []ChallengeID) ([]ChallengeProgress, error) {
 	request := PlayerProgressRequest{
-		PlayerID:     playerID,
+		PlayerID:     p.localPlayerID,
 		ChallengeIDs: challengeIDs,
 	}
 
@@ -137,9 +137,9 @@ func (p *PsyNetRPC) GetChallengeProgress(ctx context.Context, playerID PlayerID,
 }
 
 // CollectChallengeReward collects rewards from a completed challenge.
-func (p *PsyNetRPC) CollectChallengeReward(ctx context.Context, playerID PlayerID, challengeID ChallengeID) error {
+func (p *PsyNetRPC) CollectChallengeReward(ctx context.Context, challengeID ChallengeID) error {
 	request := CollectRewardRequest{
-		PlayerID:    playerID,
+		PlayerID:    p.localPlayerID,
 		ChallengeID: challengeID,
 	}
 
@@ -152,9 +152,9 @@ func (p *PsyNetRPC) CollectChallengeReward(ctx context.Context, playerID PlayerI
 }
 
 // FTECheckpointComplete marks a First Time Experience (FTE) checkpoint as complete.
-func (p *PsyNetRPC) FTECheckpointComplete(ctx context.Context, playerID PlayerID, groupName string, checkpointName string) error {
+func (p *PsyNetRPC) FTECheckpointComplete(ctx context.Context, groupName string, checkpointName string) error {
 	request := FTECheckpointCompleteRequest{
-		PlayerID:       playerID,
+		PlayerID:       p.localPlayerID,
 		GroupName:      groupName,
 		CheckpointName: checkpointName,
 	}
@@ -168,9 +168,9 @@ func (p *PsyNetRPC) FTECheckpointComplete(ctx context.Context, playerID PlayerID
 }
 
 // FTEGroupComplete marks a First Time Experience (FTE) group as complete.
-func (p *PsyNetRPC) FTEGroupComplete(ctx context.Context, playerID PlayerID, groupName string) error {
+func (p *PsyNetRPC) FTEGroupComplete(ctx context.Context, groupName string) error {
 	request := FTEGroupCompleteRequest{
-		PlayerID:  playerID,
+		PlayerID:  p.localPlayerID,
 		GroupName: groupName,
 	}
 

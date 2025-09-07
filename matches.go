@@ -69,10 +69,10 @@ type GetMatchHistoryResponse struct {
 	Matches []MatchEntry `json:"Matches"`
 }
 
-// GetMatchHistory retrieves match history for a player.
-func (p *PsyNetRPC) GetMatchHistory(ctx context.Context, playerID PlayerID) ([]MatchEntry, error) {
+// GetMatchHistory retrieves match history for the authenticated player.
+func (p *PsyNetRPC) GetMatchHistory(ctx context.Context) ([]MatchEntry, error) {
 	request := GetMatchHistoryRequest{
-		PlayerID: playerID,
+		PlayerID: p.localPlayerID,
 	}
 
 	var result GetMatchHistoryResponse

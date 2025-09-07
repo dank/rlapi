@@ -102,21 +102,21 @@ func allChallenges(ctx context.Context, rpc *rlapi.PsyNetRPC, playerID rlapi.Pla
 		challengeIDs = append(challengeIDs, challenge.ID)
 	}
 
-	progress, err := rpc.GetChallengeProgress(ctx, playerID, challengeIDs)
+	progress, err := rpc.GetChallengeProgress(ctx, challengeIDs)
 	if err != nil {
 		return fmt.Errorf("GetChallengeProgress err: %w", err)
 	}
 	slog.Debug("GetChallengeProgress", slog.Any("progress", progress))
 
-	err = rpc.CollectChallengeReward(ctx, playerID, challengeIDs[0])
+	err = rpc.CollectChallengeReward(ctx, challengeIDs[0])
 	if err != nil {
 		return fmt.Errorf("CollectChallengeReward err: %w", err)
 	}
 
-	err = rpc.FTECheckpointComplete(ctx, playerID, "test", "test")
+	err = rpc.FTECheckpointComplete(ctx, "test", "test")
 	slog.Debug("FTECheckpointComplete", slog.Any("err", err))
 
-	err = rpc.FTEGroupComplete(ctx, playerID, "test")
+	err = rpc.FTEGroupComplete(ctx, "test")
 	slog.Debug("FTEGroupComplete", slog.Any("err", err))
 
 	return nil
@@ -267,7 +267,7 @@ func allPlayers(ctx context.Context, rpc *rlapi.PsyNetRPC, playerID rlapi.Player
 	}
 	slog.Debug("GetProfiles", slog.Any("profiles", profiles))
 
-	xp, err := rpc.GetXP(ctx, playerID)
+	xp, err := rpc.GetXP(ctx)
 	if err != nil {
 		return fmt.Errorf("GetXP err: %w", err)
 	}
@@ -276,7 +276,7 @@ func allPlayers(ctx context.Context, rpc *rlapi.PsyNetRPC, playerID rlapi.Player
 	creatorCode, err := rpc.GetCreatorCode(ctx)
 	slog.Debug("GetCreatorCode", slog.Any("creatorCode", creatorCode), slog.Any("err", err))
 
-	err = rpc.ReportPlayer(ctx, []rlapi.Report{{Reporter: playerID, Offender: setup.RandomPlayerID, ReasonIDs: []int{3}, ReportTimestamp: 0.0}}, "")
+	err = rpc.ReportPlayer(ctx, setup.RandomPlayerID, []int{3}, "")
 	slog.Debug("ReportPlayer", slog.Any("err", err))
 
 	return nil
@@ -353,7 +353,7 @@ func allShops(ctx context.Context, rpc *rlapi.PsyNetRPC, playerID rlapi.PlayerID
 		slog.Debug("GetShopCatalogue", slog.Any("shopCatalogue", shopCatalogue))
 	}
 
-	wallet, err := rpc.GetPlayerWallet(ctx, playerID)
+	wallet, err := rpc.GetPlayerWallet(ctx)
 	if err != nil {
 		return fmt.Errorf("GetPlayerWallet err: %w", err)
 	}
@@ -369,7 +369,7 @@ func allShops(ctx context.Context, rpc *rlapi.PsyNetRPC, playerID rlapi.PlayerID
 }
 
 func allProducts(ctx context.Context, rpc *rlapi.PsyNetRPC, playerID rlapi.PlayerID) error {
-	products, err := rpc.GetPlayerProducts(ctx, playerID, "1756577989")
+	products, err := rpc.GetPlayerProducts(ctx, 1756577989)
 	if err != nil {
 		return fmt.Errorf("GetPlayerProducts err: %w", err)
 	}
@@ -381,10 +381,10 @@ func allProducts(ctx context.Context, rpc *rlapi.PsyNetRPC, playerID rlapi.Playe
 	}
 	slog.Debug("GetContainerDropTable", slog.Any("dropTable", dropTable))
 
-	unlocked, err := rpc.UnlockContainer(ctx, playerID, []string{"90a79f045cad4556b95eea1270be0e76"})
+	unlocked, err := rpc.UnlockContainer(ctx, []string{"90a79f045cad4556b95eea1270be0e76"})
 	slog.Debug("UnlockContainer", slog.Any("unlocked", unlocked), slog.Any("err", err))
 
-	traded, err := rpc.TradeIn(ctx, playerID, []string{"62d1e4bc3f5b4076bba8ea044a14a36c", "b3f60779705f4c8a926a14d6899bad70", "e610e81c23904c0696a25e9537aff4ba", "a10e3fa58af141b3829fec050889c967", "7cf368745031457dbfa7ec8ae4ab316f"})
+	traded, err := rpc.TradeIn(ctx, []string{"62d1e4bc3f5b4076bba8ea044a14a36c", "b3f60779705f4c8a926a14d6899bad70", "e610e81c23904c0696a25e9537aff4ba", "a10e3fa58af141b3829fec050889c967", "7cf368745031457dbfa7ec8ae4ab316f"})
 	slog.Debug("TradeIn", slog.Any("traded", traded), slog.Any("err", err))
 
 	crossStatus, err := rpc.GetCrossEntitlementProductStatus(ctx)
@@ -413,7 +413,7 @@ func allMTX(ctx context.Context, rpc *rlapi.PsyNetRPC) error {
 }
 
 func allRocketPass(ctx context.Context, rpc *rlapi.PsyNetRPC, playerID rlapi.PlayerID) error {
-	playerInfo, err := rpc.GetRocketPassPlayerInfo(ctx, playerID, 25)
+	playerInfo, err := rpc.GetRocketPassPlayerInfo(ctx, 25)
 	if err != nil {
 		return fmt.Errorf("GetRocketPassPlayerInfo err: %w", err)
 	}
@@ -425,7 +425,7 @@ func allRocketPass(ctx context.Context, rpc *rlapi.PsyNetRPC, playerID rlapi.Pla
 	}
 	slog.Debug("GetRocketPassRewardContent", slog.Any("rewardContent", rewardContent))
 
-	prestigeRewards, err := rpc.GetRocketPassPrestigeRewards(ctx, playerID, 25)
+	prestigeRewards, err := rpc.GetRocketPassPrestigeRewards(ctx, 25)
 	if err != nil {
 		return fmt.Errorf("GetRocketPassPrestigeRewards err: %w", err)
 	}
@@ -435,35 +435,35 @@ func allRocketPass(ctx context.Context, rpc *rlapi.PsyNetRPC, playerID rlapi.Pla
 }
 
 func allTournaments(ctx context.Context, rpc *rlapi.PsyNetRPC, playerID rlapi.PlayerID) error {
-	scheduleRegion, err := rpc.GetTournamentScheduleRegion(ctx, playerID)
+	scheduleRegion, err := rpc.GetTournamentScheduleRegion(ctx)
 	if err != nil {
 		return fmt.Errorf("GetTournamentScheduleRegion err: %w", err)
 	}
 	slog.Debug("GetTournamentScheduleRegion", slog.Any("scheduleRegion", scheduleRegion))
 
-	cycleData, err := rpc.GetTournamentCycleData(ctx, playerID)
+	cycleData, err := rpc.GetTournamentCycleData(ctx)
 	if err != nil {
 		return fmt.Errorf("GetTournamentCycleData err: %w", err)
 	}
 	slog.Debug("GetTournamentCycleData", slog.Any("cycleData", cycleData))
 
-	schedule, err := rpc.GetTournamentSchedule(ctx, playerID, scheduleRegion)
+	schedule, err := rpc.GetTournamentSchedule(ctx, scheduleRegion)
 	if err != nil {
 		return fmt.Errorf("GetTournamentSchedule err: %w", err)
 	}
 	slog.Debug("GetTournamentSchedule", slog.Any("schedule", schedule))
 
-	publicTournaments, err := rpc.GetPublicTournaments(ctx, playerID, rlapi.TournamentSearchInfo{Text: "", RankMin: -1, RankMax: 22, TeamSize: 1, BracketSize: 0, EnableCrossplay: true, StartTime: "1757216536", EndTime: "0", ShowFull: false, ShowIneligibleRank: false}, []rlapi.PlayerID{})
+	publicTournaments, err := rpc.GetPublicTournaments(ctx, rlapi.TournamentSearchInfo{Text: "", RankMin: -1, RankMax: 22, TeamSize: 1, BracketSize: 0, EnableCrossplay: true, StartTime: "1757216536", EndTime: "0", ShowFull: false, ShowIneligibleRank: false}, []rlapi.PlayerID{})
 	slog.Debug("GetPublicTournaments", slog.Any("publicTournaments", publicTournaments), slog.Any("err", err))
 
 	tournamentId := rlapi.TournamentID(strconv.Itoa(schedule[0].Tournaments[0].ID))
-	tournament, err := rpc.RegisterTournament(ctx, playerID, tournamentId, rlapi.TournamentCredentials{})
+	tournament, err := rpc.RegisterTournament(ctx, tournamentId, rlapi.TournamentCredentials{})
 	slog.Debug("RegisterTournament", slog.Any("tournament", tournament), slog.Any("err", err))
 
-	err = rpc.UnsubscribeTournament(ctx, playerID, tournamentId, true, []rlapi.PlayerID{})
+	err = rpc.UnsubscribeTournament(ctx, tournamentId, true, []rlapi.PlayerID{})
 	slog.Debug("UnsubscribeTournament", slog.Any("err", err))
 
-	subscriptions, err := rpc.GetTournamentSubscriptions(ctx, playerID)
+	subscriptions, err := rpc.GetTournamentSubscriptions(ctx)
 	slog.Debug("GetTournamentSubscriptions", slog.Any("subscriptions", subscriptions), slog.Any("err", err))
 
 	return nil
@@ -492,7 +492,7 @@ func allMisc(ctx context.Context, rpc *rlapi.PsyNetRPC, playerID rlapi.PlayerID)
 	ping, err := rpc.GetGameServerPingList(ctx)
 	slog.Debug("GetGameServerPingList", slog.Any("ping", ping), slog.Any("err", err))
 
-	matches, err := rpc.GetMatchHistory(ctx, playerID)
+	matches, err := rpc.GetMatchHistory(ctx)
 	slog.Debug("GetMatchHistory", slog.Any("matches", matches), slog.Any("err", err))
 
 	regions, err := rpc.GetSubRegions(ctx)

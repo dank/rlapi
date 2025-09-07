@@ -1,6 +1,9 @@
 package rlapi
 
-import "context"
+import (
+	"context"
+	"strconv"
+)
 
 type ContainerDrop struct {
 	ProductID int       `json:"ProductID"`
@@ -65,10 +68,10 @@ type GetProductStatusResponse struct {
 }
 
 // GetPlayerProducts retrieves all products/items owned by the authenticated player.
-func (p *PsyNetRPC) GetPlayerProducts(ctx context.Context, playerID PlayerID, updatedTimestamp string) ([]Product, error) {
+func (p *PsyNetRPC) GetPlayerProducts(ctx context.Context, updatedTimestamp int) ([]Product, error) {
 	request := GetPlayerProductsRequest{
-		PlayerID:         playerID,
-		UpdatedTimestamp: updatedTimestamp,
+		PlayerID:         p.localPlayerID,
+		UpdatedTimestamp: strconv.Itoa(updatedTimestamp),
 	}
 
 	var result GetPlayerProductsResponse
@@ -90,9 +93,9 @@ func (p *PsyNetRPC) GetContainerDropTable(ctx context.Context) ([]ContainerDrop,
 }
 
 // UnlockContainer unlocks containers returns the dropped items.
-func (p *PsyNetRPC) UnlockContainer(ctx context.Context, playerID PlayerID, instanceIDs []string) ([]Product, error) {
+func (p *PsyNetRPC) UnlockContainer(ctx context.Context, instanceIDs []string) ([]Product, error) {
 	request := UnlockContainerRequest{
-		PlayerID:       playerID,
+		PlayerID:       p.localPlayerID,
 		InstanceIDs:    instanceIDs,
 		KeyInstanceIDs: []string{},
 	}
@@ -106,9 +109,9 @@ func (p *PsyNetRPC) UnlockContainer(ctx context.Context, playerID PlayerID, inst
 }
 
 // TradeIn trades in multiple items for new items.
-func (p *PsyNetRPC) TradeIn(ctx context.Context, playerID PlayerID, productInstances []string) ([]Product, error) {
+func (p *PsyNetRPC) TradeIn(ctx context.Context, productInstances []string) ([]Product, error) {
 	request := TradeInRequest{
-		PlayerID:         playerID,
+		PlayerID:         p.localPlayerID,
 		ProductInstances: productInstances,
 	}
 

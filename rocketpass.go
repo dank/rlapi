@@ -106,9 +106,9 @@ type GetPlayerPrestigeRewardsResponse struct {
 }
 
 // GetRocketPassPlayerInfo retrieves Rocket Pass information for the authenticated player.
-func (p *PsyNetRPC) GetRocketPassPlayerInfo(ctx context.Context, playerID PlayerID, rocketPassID int) (*GetPlayerInfoResponse, error) {
+func (p *PsyNetRPC) GetRocketPassPlayerInfo(ctx context.Context, rocketPassID int) (*GetPlayerInfoResponse, error) {
 	request := GetPlayerInfoRequest{
-		PlayerID:        playerID,
+		PlayerID:        p.localPlayerID,
 		RocketPassID:    rocketPassID,
 		RocketPassInfo:  map[string]interface{}{},
 		RocketPassStore: map[string]interface{}{},
@@ -140,9 +140,9 @@ func (p *PsyNetRPC) GetRocketPassRewardContent(ctx context.Context, rocketPassID
 }
 
 // GetRocketPassPrestigeRewards retrieves prestige rewards for the authenticated player's Rocket Pass.
-func (p *PsyNetRPC) GetRocketPassPrestigeRewards(ctx context.Context, playerID PlayerID, rocketPassID int) ([]PrestigeReward, error) {
+func (p *PsyNetRPC) GetRocketPassPrestigeRewards(ctx context.Context, rocketPassID int) ([]PrestigeReward, error) {
 	request := GetPlayerPrestigeRewardsRequest{
-		PlayerID:     playerID,
+		PlayerID:     p.localPlayerID,
 		RocketPassID: rocketPassID,
 	}
 

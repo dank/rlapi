@@ -157,9 +157,9 @@ type GetTournamentSubscriptionsRequest struct {
 }
 
 // GetTournamentScheduleRegion retrieves the tournament schedule region for the authenticated player.
-func (p *PsyNetRPC) GetTournamentScheduleRegion(ctx context.Context, playerID PlayerID) (string, error) {
+func (p *PsyNetRPC) GetTournamentScheduleRegion(ctx context.Context) (string, error) {
 	request := GetScheduleRegionRequest{
-		PlayerID: playerID,
+		PlayerID: p.localPlayerID,
 	}
 
 	var result GetScheduleRegionResponse
@@ -171,9 +171,9 @@ func (p *PsyNetRPC) GetTournamentScheduleRegion(ctx context.Context, playerID Pl
 }
 
 // GetTournamentCycleData retrieves tournament cycle data for the authenticated player.
-func (p *PsyNetRPC) GetTournamentCycleData(ctx context.Context, playerID PlayerID) (*GetCycleDataResponse, error) {
+func (p *PsyNetRPC) GetTournamentCycleData(ctx context.Context) (*GetCycleDataResponse, error) {
 	request := GetCycleDataRequest{
-		PlayerID: playerID,
+		PlayerID: p.localPlayerID,
 	}
 
 	var result GetCycleDataResponse
@@ -185,9 +185,9 @@ func (p *PsyNetRPC) GetTournamentCycleData(ctx context.Context, playerID PlayerI
 }
 
 // GetTournamentSchedule retrieves the tournament schedule for a given region.
-func (p *PsyNetRPC) GetTournamentSchedule(ctx context.Context, playerID PlayerID, region string) ([]TournamentSchedule, error) {
+func (p *PsyNetRPC) GetTournamentSchedule(ctx context.Context, region string) ([]TournamentSchedule, error) {
 	request := GetScheduleRequest{
-		PlayerID: playerID,
+		PlayerID: p.localPlayerID,
 		Region:   region,
 	}
 
@@ -199,10 +199,10 @@ func (p *PsyNetRPC) GetTournamentSchedule(ctx context.Context, playerID PlayerID
 	return result.Schedules, nil
 }
 
-// GetPublicTournaments retrieves a list of public tournaments.
-func (p *PsyNetRPC) GetPublicTournaments(ctx context.Context, playerID PlayerID, searchInfo TournamentSearchInfo, teamMembers []PlayerID) ([]Tournament, error) {
+// GetPublicTournaments retrieves a list of public tournaments for the authenticated player.
+func (p *PsyNetRPC) GetPublicTournaments(ctx context.Context, searchInfo TournamentSearchInfo, teamMembers []PlayerID) ([]Tournament, error) {
 	request := GetPublicTournamentsRequest{
-		PlayerID:    playerID,
+		PlayerID:    p.localPlayerID,
 		Search:      searchInfo,
 		TeamMembers: teamMembers,
 	}
@@ -216,9 +216,9 @@ func (p *PsyNetRPC) GetPublicTournaments(ctx context.Context, playerID PlayerID,
 }
 
 // RegisterTournament registers the authenticated player for a tournament.
-func (p *PsyNetRPC) RegisterTournament(ctx context.Context, playerID PlayerID, tournamentID TournamentID, credentials TournamentCredentials) (*Tournament, error) {
+func (p *PsyNetRPC) RegisterTournament(ctx context.Context, tournamentID TournamentID, credentials TournamentCredentials) (*Tournament, error) {
 	request := RegisterTournamentRequest{
-		PlayerID:     playerID,
+		PlayerID:     p.localPlayerID,
 		TournamentID: tournamentID,
 		Credentials:  credentials,
 	}
@@ -232,9 +232,9 @@ func (p *PsyNetRPC) RegisterTournament(ctx context.Context, playerID PlayerID, t
 }
 
 // UnsubscribeTournament unsubscribes the authenticated player from a tournament.
-func (p *PsyNetRPC) UnsubscribeTournament(ctx context.Context, playerID PlayerID, tournamentID TournamentID, unsubscribeAnyRegisteredTournament bool, teamMembers []PlayerID) error {
+func (p *PsyNetRPC) UnsubscribeTournament(ctx context.Context, tournamentID TournamentID, unsubscribeAnyRegisteredTournament bool, teamMembers []PlayerID) error {
 	request := UnsubscribeTournamentRequest{
-		PlayerID:                           playerID,
+		PlayerID:                           p.localPlayerID,
 		TournamentID:                       tournamentID,
 		UnsubscribeAnyRegisteredTournament: unsubscribeAnyRegisteredTournament,
 		TeamMembers:                        teamMembers,
@@ -249,9 +249,9 @@ func (p *PsyNetRPC) UnsubscribeTournament(ctx context.Context, playerID PlayerID
 }
 
 // GetTournamentSubscriptions retrieves the authenticated player's tournament subscriptions.
-func (p *PsyNetRPC) GetTournamentSubscriptions(ctx context.Context, playerID PlayerID) (interface{}, error) {
+func (p *PsyNetRPC) GetTournamentSubscriptions(ctx context.Context) (interface{}, error) {
 	request := GetTournamentSubscriptionsRequest{
-		PlayerID: playerID,
+		PlayerID: p.localPlayerID,
 	}
 
 	var result interface{}
