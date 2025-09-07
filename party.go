@@ -2,113 +2,68 @@ package rlapi
 
 import "context"
 
-// PartyInfo represents information about a player's party
+type PartyID string
+
 type PartyInfo struct {
-	PartyID   string        `json:"PartyID"`
-	OwnerID   PlayerID      `json:"OwnerID"`
-	Members   []PartyMember `json:"Members"`
-	Invites   []PartyInvite `json:"Invites"`
-	CreatedAt int64         `json:"CreatedAt"`
-	Settings  PartySettings `json:"Settings"`
+	PartyID         string `json:"PartyID"`
+	CreatedAt       int64  `json:"CreatedAt"`
+	CreatedByUserID string `json:"CreatedByUserID"`
+	JoinID          string `json:"JoinID"`
 }
 
-// PartyMember represents a member of a party
 type PartyMember struct {
-	PlayerID   PlayerID `json:"PlayerID"`
-	PlayerName string   `json:"PlayerName"`
-	Platform   string   `json:"Platform"`
-	JoinedAt   int64    `json:"JoinedAt"`
-	IsReady    bool     `json:"IsReady"`
+	PartyID  string `json:"PartyID"`
+	UserID   string `json:"UserID"`
+	UserName string `json:"UserName"`
+	JoinedAt int64  `json:"JoinedAt"`
+	Role     string `json:"Role"`
 }
 
-// PartyInvite represents an invitation to join a party
-type PartyInvite struct {
-	InviterID   PlayerID `json:"InviterID"`
-	InviterName string   `json:"InviterName"`
-	InviteeID   PlayerID `json:"InviteeID"`
-	PartyID     string   `json:"PartyID"`
-	SentAt      int64    `json:"SentAt"`
-}
-
-// PartySettings represents party configuration settings
-type PartySettings struct {
-	MaxMembers   int  `json:"MaxMembers"`
-	IsPrivate    bool `json:"IsPrivate"`
-	AllowInvites bool `json:"AllowInvites"`
+type PartyResponse struct {
+	Info    PartyInfo     `json:"Info"`
+	Members []PartyMember `json:"Members"`
 }
 
 type GetPlayerPartyInfoResponse struct {
-	Invites []PartyInvite `json:"Invites"`
+	Invites []interface{} `json:"Invites"`
 }
 
 type CreatePartyRequest struct {
-	BForcePartyonix bool `json:"bForcePartyonix"`
-}
-
-type CreatePartyResponse struct {
-	PartyID   string    `json:"PartyID"`
-	PartyInfo PartyInfo `json:"PartyInfo"`
+	ForcePartyonix bool `json:"bForcePartyonix"`
 }
 
 type JoinPartyRequest struct {
-	JoinID  string `json:"JoinID"`
-	PartyID string `json:"PartyID"`
-}
-
-type JoinPartyResponse struct {
-	Success   bool      `json:"Success"`
-	PartyInfo PartyInfo `json:"PartyInfo"`
+	JoinID  string  `json:"JoinID"`
+	PartyID PartyID `json:"PartyID"`
 }
 
 type LeavePartyRequest struct {
-	PartyID string `json:"PartyID"`
-}
-
-type LeavePartyResponse struct {
-	Success bool `json:"Success"`
+	PartyID PartyID `json:"PartyID"`
 }
 
 type SendPartyInviteRequest struct {
 	InviteeID PlayerID `json:"InviteeID"`
-	PartyID   string   `json:"PartyID"`
-}
-
-type SendPartyInviteResponse struct {
-	Success bool `json:"Success"`
+	PartyID   PartyID  `json:"PartyID"`
 }
 
 type SendPartyJoinRequestRequest struct {
 	PlayerID PlayerID `json:"PlayerID"`
 }
 
-type SendPartyJoinRequestResponse struct {
-	Success bool `json:"Success"`
-}
-
 type ChangePartyOwnerRequest struct {
 	NewOwnerID PlayerID `json:"NewOwnerID"`
-	PartyID    string   `json:"PartyID"`
-}
-
-type ChangePartyOwnerResponse struct {
-	Success   bool      `json:"Success"`
-	PartyInfo PartyInfo `json:"PartyInfo"`
+	PartyID    PartyID  `json:"PartyID"`
 }
 
 type KickPartyMembersRequest struct {
 	Members    []PlayerID `json:"Members"`
 	KickReason int        `json:"KickReason"`
-	PartyID    string     `json:"PartyID"`
-}
-
-type KickPartyMembersResponse struct {
-	Success   bool      `json:"Success"`
-	PartyInfo PartyInfo `json:"PartyInfo"`
+	PartyID    PartyID    `json:"PartyID"`
 }
 
 type SendPartyChatMessageRequest struct {
-	Message string `json:"Message"`
-	PartyID string `json:"PartyID"`
+	Message string  `json:"Message"`
+	PartyID PartyID `json:"PartyID"`
 }
 
 type SendPartyChatMessageResponse struct {
@@ -117,8 +72,8 @@ type SendPartyChatMessageResponse struct {
 }
 
 type SendPartyMessageRequest struct {
-	Message string `json:"Message"`
-	PartyID string `json:"PartyID"`
+	Message string  `json:"Message"`
+	PartyID PartyID `json:"PartyID"`
 }
 
 type SendPartyMessageResponse struct {
@@ -126,23 +81,22 @@ type SendPartyMessageResponse struct {
 	MessageID string `json:"MessageID"`
 }
 
-// GetPlayerPartyInfo retrieves party information for the current player.
-func (p *PsyNetRPC) GetPlayerPartyInfo(ctx context.Context) (*GetPlayerPartyInfoResponse, error) {
+func (p *PsyNetRPC) GetPlayerPartyInfo(ctx context.Context) ([]interface{}, error) {
 	var result GetPlayerPartyInfoResponse
-	err := p.sendRequestSync(ctx, "Party/GetPlayerPartyInfo v1", map[string]interface{}{}, &result)
+	err := p.sendRequestSync(ctx, "Party/GetPlayerPartyInfo v1", emptyRequest{}, &result)
 	if err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return result.Invites, nil
 }
 
 // CreateParty creates a new party.
-func (p *PsyNetRPC) CreateParty(ctx context.Context, forcePartyonix bool) (*CreatePartyResponse, error) {
+func (p *PsyNetRPC) CreateParty(ctx context.Context) (*PartyResponse, error) {
 	request := CreatePartyRequest{
-		BForcePartyonix: forcePartyonix,
+		ForcePartyonix: true,
 	}
 
-	var result CreatePartyResponse
+	var result PartyResponse
 	err := p.sendRequestSync(ctx, "Party/CreateParty v1", request, &result)
 	if err != nil {
 		return nil, err
@@ -150,14 +104,14 @@ func (p *PsyNetRPC) CreateParty(ctx context.Context, forcePartyonix bool) (*Crea
 	return &result, nil
 }
 
-// JoinParty joins an existing party.
-func (p *PsyNetRPC) JoinParty(ctx context.Context, joinID, partyID string) (*JoinPartyResponse, error) {
+// JoinParty joins an existing party by join ID or party ID.
+func (p *PsyNetRPC) JoinParty(ctx context.Context, joinID string, partyID PartyID) (*PartyResponse, error) {
 	request := JoinPartyRequest{
 		JoinID:  joinID,
 		PartyID: partyID,
 	}
 
-	var result JoinPartyResponse
+	var result PartyResponse
 	err := p.sendRequestSync(ctx, "Party/JoinParty v1", request, &result)
 	if err != nil {
 		return nil, err
@@ -165,57 +119,57 @@ func (p *PsyNetRPC) JoinParty(ctx context.Context, joinID, partyID string) (*Joi
 	return &result, nil
 }
 
-// LeaveParty leaves the current party.
-func (p *PsyNetRPC) LeaveParty(ctx context.Context, partyID string) (*LeavePartyResponse, error) {
+// LeaveParty leaves a party by ID.
+func (p *PsyNetRPC) LeaveParty(ctx context.Context, partyID PartyID) error {
 	request := LeavePartyRequest{
 		PartyID: partyID,
 	}
 
-	var result LeavePartyResponse
+	var result interface{}
 	err := p.sendRequestSync(ctx, "Party/LeaveParty v1", request, &result)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return &result, nil
+	return nil
 }
 
 // SendPartyInvite sends an invitation to join the party.
-func (p *PsyNetRPC) SendPartyInvite(ctx context.Context, inviteeID PlayerID, partyID string) (*SendPartyInviteResponse, error) {
+func (p *PsyNetRPC) SendPartyInvite(ctx context.Context, inviteeID PlayerID, partyID PartyID) error {
 	request := SendPartyInviteRequest{
 		InviteeID: inviteeID,
 		PartyID:   partyID,
 	}
 
-	var result SendPartyInviteResponse
+	var result interface{}
 	err := p.sendRequestSync(ctx, "Party/SendPartyInvite v2", request, &result)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return &result, nil
+	return nil
 }
 
 // SendPartyJoinRequest sends a request to join another player's party.
-func (p *PsyNetRPC) SendPartyJoinRequest(ctx context.Context, playerID PlayerID) (*SendPartyJoinRequestResponse, error) {
+func (p *PsyNetRPC) SendPartyJoinRequest(ctx context.Context, playerID PlayerID) error {
 	request := SendPartyJoinRequestRequest{
 		PlayerID: playerID,
 	}
 
-	var result SendPartyJoinRequestResponse
+	var result interface{}
 	err := p.sendRequestSync(ctx, "Party/SendPartyJoinRequest v1", request, &result)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return &result, nil
+	return nil
 }
 
-// ChangePartyOwner transfers party ownership to another member.
-func (p *PsyNetRPC) ChangePartyOwner(ctx context.Context, newOwnerID PlayerID, partyID string) (*ChangePartyOwnerResponse, error) {
+// ChangePartyOwner transfers party ownership to another party member.
+func (p *PsyNetRPC) ChangePartyOwner(ctx context.Context, newOwnerID PlayerID, partyID PartyID) (*PartyResponse, error) {
 	request := ChangePartyOwnerRequest{
 		NewOwnerID: newOwnerID,
 		PartyID:    partyID,
 	}
 
-	var result ChangePartyOwnerResponse
+	var result PartyResponse
 	err := p.sendRequestSync(ctx, "Party/ChangePartyOwner v1", request, &result)
 	if err != nil {
 		return nil, err
@@ -224,24 +178,24 @@ func (p *PsyNetRPC) ChangePartyOwner(ctx context.Context, newOwnerID PlayerID, p
 }
 
 // KickPartyMembers removes members from the party.
-func (p *PsyNetRPC) KickPartyMembers(ctx context.Context, members []PlayerID, kickReason int, partyID string) (*KickPartyMembersResponse, error) {
+func (p *PsyNetRPC) KickPartyMembers(ctx context.Context, members []PlayerID, kickReason int, partyID PartyID) error {
 	request := KickPartyMembersRequest{
 		Members:    members,
 		KickReason: kickReason,
 		PartyID:    partyID,
 	}
 
-	var result KickPartyMembersResponse
+	var result interface{}
 	err := p.sendRequestSync(ctx, "Party/KickPartyMembers v1", request, &result)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return &result, nil
+	return nil
 }
 
 // SendPartyChatMessage sends a chat message to the party.
-func (p *PsyNetRPC) SendPartyChatMessage(ctx context.Context, message, partyID string) (*SendPartyChatMessageResponse, error) {
-	request := SendPartyChatMessageRequest{
+func (p *PsyNetRPC) SendPartyChatMessage(ctx context.Context, message string, partyID PartyID) error {
+	request := SendPartyMessageRequest{
 		Message: message,
 		PartyID: partyID,
 	}
@@ -249,13 +203,13 @@ func (p *PsyNetRPC) SendPartyChatMessage(ctx context.Context, message, partyID s
 	var result SendPartyChatMessageResponse
 	err := p.sendRequestSync(ctx, "Party/SendPartyChatMessage v1", request, &result)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return &result, nil
+	return nil
 }
 
-// SendPartyMessage sends a system message to the party.
-func (p *PsyNetRPC) SendPartyMessage(ctx context.Context, message, partyID string) (*SendPartyMessageResponse, error) {
+// SendPartyMessage sends an encoded message to the party.
+func (p *PsyNetRPC) SendPartyMessage(ctx context.Context, message string, partyID PartyID) error {
 	request := SendPartyMessageRequest{
 		Message: message,
 		PartyID: partyID,
@@ -264,7 +218,7 @@ func (p *PsyNetRPC) SendPartyMessage(ctx context.Context, message, partyID strin
 	var result SendPartyMessageResponse
 	err := p.sendRequestSync(ctx, "Party/SendPartyMessage v1", request, &result)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return &result, nil
+	return nil
 }
