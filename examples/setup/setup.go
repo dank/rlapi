@@ -44,7 +44,7 @@ func RPC() (*rlapi.PsyNetRPC, rlapi.PlayerID) {
 	}
 
 	psyNet := rlapi.NewPsyNet()
-	rpc, err := psyNet.AuthPlayer(rlapi.PlatformEpic, authToken.AccessToken, authToken.AccountID, auth.DisplayName)
+	rpc, err := psyNet.AuthPlayer(authToken.AccessToken, authToken.AccountID, auth.DisplayName)
 	if err != nil {
 		log.Fatalf("Failed to authenticate player: %v", err)
 	}

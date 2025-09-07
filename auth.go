@@ -29,8 +29,9 @@ type AuthPlayerResponse struct {
 	CountryRestrictions []string `json:"CountryRestrictions"`
 }
 
-// AuthPlayer authenticates with PsyNet and returns a WebSocket connection.
-func (p *PsyNet) AuthPlayer(platform Platform, authToken string, accountID string, accountName string) (*PsyNetRPC, error) {
+// AuthPlayer authenticates with PsyNet via EGS and returns a WebSocket connection.
+func (p *PsyNet) AuthPlayer(authToken string, accountID string, accountName string) (*PsyNetRPC, error) {
+	platform := PlatformEpic
 	localPlayerId := fmt.Sprintf("%s|%s|0", platform, accountID)
 	req := &AuthPlayerRequest{
 		Platform:            string(platform),
@@ -46,6 +47,40 @@ func (p *PsyNet) AuthPlayer(platform Platform, authToken string, accountID strin
 		SetAsPrimaryAccount: true,
 		EpicAuthTicket:      authToken,
 		EpicAccountID:       accountID,
+	}
+
+	var res AuthPlayerResponse
+	err := p.postJSON([]string{"Auth", "AuthPlayer", "v2"}, req, &res)
+	if err != nil {
+		return nil, fmt.Errorf("failed to authenticate player: %w", err)
+	}
+
+	rpc, err := p.establishSocket(res.PerConURLv2, res.PsyToken, res.SessionID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to establish websocket: %w", err)
+	}
+
+	go rpc.readMessages()
+	rpc.schedulePing()
+
+	return rpc, nil
+}
+
+// AuthPlayerSteam authenticates with PsyNet via Steam session ticket and returns a WebSocket connection.
+func (p *PsyNet) AuthPlayerSteam(authToken string, epicAccountID string, steamAccountID string, accountName string) (*PsyNetRPC, error) {
+	req := &AuthPlayerRequest{
+		Platform:            string(PlatformSteam),
+		PlayerName:          accountName,
+		PlayerID:            steamAccountID,
+		Language:            "INT",
+		AuthTicket:          authToken,
+		BuildRegion:         "",
+		FeatureSet:          featureSet,
+		Device:              "PC",
+		SkipAuth:            false,
+		SetAsPrimaryAccount: true,
+		EpicAuthTicket:      authToken,
+		EpicAccountID:       epicAccountID,
 	}
 
 	var res AuthPlayerResponse

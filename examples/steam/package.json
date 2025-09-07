@@ -1,0 +1,12 @@
+{
+  "name": "steam-auth-example",
+  "version": "1.0.0",
+  "description": "Generate Steam auth session tickets for Rocket League",
+  "main": "steam-ticket.js",
+  "scripts": {
+    "start": "node steam-ticket.js"
+  },
+  "dependencies": {
+    "steam-user": "^4.29.0"
+  }
+}

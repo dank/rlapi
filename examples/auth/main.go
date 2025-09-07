@@ -45,7 +45,7 @@ func main() {
 	}
 
 	psyNet := rlapi.NewPsyNet()
-	rpc, err := psyNet.AuthPlayer(rlapi.PlatformEpic, authToken.AccessToken, auth.AccountID, auth.DisplayName)
+	rpc, err := psyNet.AuthPlayer(authToken.AccessToken, auth.AccountID, auth.DisplayName)
 	if err != nil {
 		log.Fatal(err)
 	}
