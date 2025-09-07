@@ -78,7 +78,7 @@ func NewPsyNetWithLogger(logger *slog.Logger) *PsyNet {
 	}
 }
 
-func (p *PsyNet) establishSocket(url string, psyToken string, sessionID string) (*PsyNetRPC, error) {
+func (p *PsyNet) establishSocket(url string, playerID PlayerID, psyToken string, sessionID string) (*PsyNetRPC, error) {
 	p.logger.Debug("establishing websocket connection", slog.String("url", url))
 
 	dialer := websocket.Dialer{}
@@ -93,7 +93,7 @@ func (p *PsyNet) establishSocket(url string, psyToken string, sessionID string) 
 		return nil, fmt.Errorf("failed to dial websocket: %w", err)
 	}
 
-	return newPsyNetRPC(conn, p.requestID, p.logger), nil
+	return newPsyNetRPC(conn, playerID, p.requestID, p.logger), nil
 }
 
 func (p *PsyNet) postJSON(path []string, params interface{}, result interface{}) error {

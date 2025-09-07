@@ -31,10 +31,9 @@ type AuthPlayerResponse struct {
 
 // AuthPlayer authenticates with PsyNet via EGS and returns a WebSocket connection.
 func (p *PsyNet) AuthPlayer(authToken string, accountID string, accountName string) (*PsyNetRPC, error) {
-	platform := PlatformEpic
-	localPlayerId := fmt.Sprintf("%s|%s|0", platform, accountID)
+	localPlayerId := NewPlayerID(PlatformEpic, accountID)
 	req := &AuthPlayerRequest{
-		Platform:            string(platform),
+		Platform:            string(PlatformEpic),
 		PlayerName:          accountName,
 		PlayerID:            accountID,
 		Language:            "INT",
@@ -42,7 +41,7 @@ func (p *PsyNet) AuthPlayer(authToken string, accountID string, accountName stri
 		BuildRegion:         "",
 		FeatureSet:          featureSet,
 		Device:              "PC",
-		LocalFirstPlayerID:  localPlayerId,
+		LocalFirstPlayerID:  localPlayerId.String(),
 		SkipAuth:            false,
 		SetAsPrimaryAccount: true,
 		EpicAuthTicket:      authToken,
@@ -55,7 +54,7 @@ func (p *PsyNet) AuthPlayer(authToken string, accountID string, accountName stri
 		return nil, fmt.Errorf("failed to authenticate player: %w", err)
 	}
 
-	rpc, err := p.establishSocket(res.PerConURLv2, res.PsyToken, res.SessionID)
+	rpc, err := p.establishSocket(res.PerConURLv2, localPlayerId, res.PsyToken, res.SessionID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to establish websocket: %w", err)
 	}
@@ -68,6 +67,7 @@ func (p *PsyNet) AuthPlayer(authToken string, accountID string, accountName stri
 
 // AuthPlayerSteam authenticates with PsyNet via Steam session ticket and returns a WebSocket connection.
 func (p *PsyNet) AuthPlayerSteam(authToken string, epicAccountID string, steamAccountID string, accountName string) (*PsyNetRPC, error) {
+	localPlayerId := NewPlayerID(PlatformSteam, steamAccountID)
 	req := &AuthPlayerRequest{
 		Platform:            string(PlatformSteam),
 		PlayerName:          accountName,
@@ -89,7 +89,7 @@ func (p *PsyNet) AuthPlayerSteam(authToken string, epicAccountID string, steamAc
 		return nil, fmt.Errorf("failed to authenticate player: %w", err)
 	}
 
-	rpc, err := p.establishSocket(res.PerConURLv2, res.PsyToken, res.SessionID)
+	rpc, err := p.establishSocket(res.PerConURLv2, localPlayerId, res.PsyToken, res.SessionID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to establish websocket: %w", err)
 	}

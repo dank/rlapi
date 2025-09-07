@@ -38,19 +38,21 @@ type PsyNetRPC struct {
 	eventCh     chan *Event
 	pendingReqs map[string]chan *PsyResponse
 
-	requestID *requestIDCounter
-	connected bool
+	requestID     *requestIDCounter
+	localPlayerID PlayerID
+	connected     bool
 }
 
-func newPsyNetRPC(wsConn *websocket.Conn, requestID *requestIDCounter, logger *slog.Logger) *PsyNetRPC {
+func newPsyNetRPC(wsConn *websocket.Conn, localPlayerID PlayerID, requestID *requestIDCounter, logger *slog.Logger) *PsyNetRPC {
 	return &PsyNetRPC{
-		wsConn:      wsConn,
-		requestID:   requestID,
-		pendingReqs: make(map[string]chan *PsyResponse),
-		pongChan:    make(chan struct{}, 1),
-		eventCh:     make(chan *Event, 32),
-		connected:   true,
-		logger:      logger,
+		wsConn:        wsConn,
+		localPlayerID: localPlayerID,
+		requestID:     requestID,
+		pendingReqs:   make(map[string]chan *PsyResponse),
+		pongChan:      make(chan struct{}, 1),
+		eventCh:       make(chan *Event, 32),
+		connected:     true,
+		logger:        logger,
 	}
 }
 
