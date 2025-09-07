@@ -109,9 +109,9 @@ func (p *PsyNetRPC) GetProfiles(ctx context.Context, playerIDs []PlayerID) ([]Pl
 }
 
 // GetXP retrieves XP information for the authenticated player.
-func (p *PsyNetRPC) GetXP(ctx context.Context, playerID PlayerID) (*PlayerXPInfo, error) {
+func (p *PsyNetRPC) GetXP(ctx context.Context) (*PlayerXPInfo, error) {
 	request := GetXPRequest{
-		PlayerID: playerID,
+		PlayerID: p.localPlayerID,
 	}
 
 	var result GetXPResponse
@@ -133,10 +133,17 @@ func (p *PsyNetRPC) GetCreatorCode(ctx context.Context) (interface{}, error) {
 }
 
 // ReportPlayer reports a player.
-func (p *PsyNetRPC) ReportPlayer(ctx context.Context, reports []Report, gameID string) error {
+func (p *PsyNetRPC) ReportPlayer(ctx context.Context, offender PlayerID, reason []int, gameID string) error {
 	request := ReportRequest{
-		Reports: reports,
-		GameID:  gameID,
+		Reports: []Report{
+			{
+				Reporter:        p.localPlayerID,
+				Offender:        offender,
+				ReasonIDs:       reason,
+				ReportTimestamp: 0.0,
+			},
+		},
+		GameID: gameID,
 	}
 
 	var result interface{}
