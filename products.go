@@ -2,49 +2,23 @@ package rlapi
 
 import "context"
 
-// ProductData represents a player's product/item data
-type ProductData struct {
-	ProductID        int                `json:"ProductID"`
-	InstanceID       string             `json:"InstanceID"`
-	Attributes       []ProductAttribute `json:"Attributes"`
-	SeriesID         int                `json:"SeriesID"`
-	AddedTimestamp   int64              `json:"AddedTimestamp"`
-	UpdatedTimestamp int64              `json:"UpdatedTimestamp"`
-	DeletedTimestamp *int64             `json:"DeletedTimestamp"`
-}
-
-// ContainerDropTable represents the drop table for containers
-type ContainerDropTable struct {
-	ContainerID int                      `json:"ContainerID"`
-	DropRates   []ContainerDropRate      `json:"DropRates"`
-	Items       []ContainerDropTableItem `json:"Items"`
-}
-
-// ContainerDropRate represents drop rates for different item rarities
-type ContainerDropRate struct {
-	Rarity string  `json:"Rarity"`
-	Rate   float64 `json:"Rate"`
-}
-
-// ContainerDropTableItem represents an item that can drop from a container
-type ContainerDropTableItem struct {
-	ProductID  int                `json:"ProductID"`
-	Rarity     string             `json:"Rarity"`
-	Attributes []ProductAttribute `json:"Attributes"`
-	Weight     int                `json:"Weight"`
+type ContainerDrop struct {
+	ProductID int       `json:"ProductID"`
+	SeriesID  int       `json:"SeriesID"`
+	Drops     []Product `json:"Drops"`
 }
 
 // UnlockResult represents the result of unlocking a container
 type UnlockResult struct {
-	UnlockedItems []ProductData `json:"UnlockedItems"`
-	UsedKeys      []string      `json:"UsedKeys"`
-	RemainingKeys []ProductData `json:"RemainingKeys"`
+	UnlockedItems []Product `json:"UnlockedItems"`
+	UsedKeys      []string  `json:"UsedKeys"`
+	RemainingKeys []Product `json:"RemainingKeys"`
 }
 
 // TradeInResult represents the result of trading in items
 type TradeInResult struct {
-	ReceivedItems []ProductData `json:"ReceivedItems"`
-	TradedItems   []string      `json:"TradedItems"`
+	ReceivedItems []Product `json:"ReceivedItems"`
+	TradedItems   []string  `json:"TradedItems"`
 }
 
 // CrossEntitlementStatus represents cross-platform entitlement status
@@ -59,11 +33,11 @@ type GetPlayerProductsRequest struct {
 }
 
 type GetPlayerProductsResponse struct {
-	ProductData []ProductData `json:"ProductData"`
+	ProductData []Product `json:"ProductData"`
 }
 
 type GetContainerDropTableResponse struct {
-	DropTables []ContainerDropTable `json:"DropTables"`
+	ContainerDrops []ContainerDrop `json:"ContainerDrops"`
 }
 
 type UnlockContainerRequest struct {
@@ -73,7 +47,7 @@ type UnlockContainerRequest struct {
 }
 
 type UnlockContainerResponse struct {
-	Results []UnlockResult `json:"Results"`
+	Drops []Product `json:"Drops"`
 }
 
 type TradeInRequest struct {
@@ -82,16 +56,16 @@ type TradeInRequest struct {
 }
 
 type TradeInResponse struct {
-	TradeInResults []TradeInResult `json:"TradeInResults"`
+	Drops []Product `json:"Drops"`
 }
 
 type GetProductStatusResponse struct {
-	CrossEntitledProductIDs []int `json:"CrossEntitledProductIDs"`
-	LockedProductIDs        []int `json:"LockedProductIDs"`
+	CrossEntitledProductIDs []int         `json:"CrossEntitledProductIDs"`
+	LockedProductIDs        []interface{} `json:"LockedProductIDs"`
 }
 
-// GetPlayerProducts retrieves all products owned by a specific player.
-func (p *PsyNetRPC) GetPlayerProducts(ctx context.Context, playerID PlayerID, updatedTimestamp string) (*GetPlayerProductsResponse, error) {
+// GetPlayerProducts retrieves all products/items owned by the authenticated player.
+func (p *PsyNetRPC) GetPlayerProducts(ctx context.Context, playerID PlayerID, updatedTimestamp string) ([]Product, error) {
 	request := GetPlayerProductsRequest{
 		PlayerID:         playerID,
 		UpdatedTimestamp: updatedTimestamp,
@@ -102,25 +76,25 @@ func (p *PsyNetRPC) GetPlayerProducts(ctx context.Context, playerID PlayerID, up
 	if err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return result.ProductData, nil
 }
 
 // GetContainerDropTable retrieves the drop table for containers.
-func (p *PsyNetRPC) GetContainerDropTable(ctx context.Context) (*GetContainerDropTableResponse, error) {
+func (p *PsyNetRPC) GetContainerDropTable(ctx context.Context) ([]ContainerDrop, error) {
 	var result GetContainerDropTableResponse
-	err := p.sendRequestSync(ctx, "Products/GetContainerDropTable v2", map[string]interface{}{}, &result)
+	err := p.sendRequestSync(ctx, "Products/GetContainerDropTable v2", emptyRequest{}, &result)
 	if err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return result.ContainerDrops, nil
 }
 
-// UnlockContainer unlocks containers using keys and returns the unlocked items.
-func (p *PsyNetRPC) UnlockContainer(ctx context.Context, playerID PlayerID, instanceIDs, keyInstanceIDs []string) (*UnlockContainerResponse, error) {
+// UnlockContainer unlocks containers returns the dropped items.
+func (p *PsyNetRPC) UnlockContainer(ctx context.Context, playerID PlayerID, instanceIDs []string) ([]Product, error) {
 	request := UnlockContainerRequest{
 		PlayerID:       playerID,
 		InstanceIDs:    instanceIDs,
-		KeyInstanceIDs: keyInstanceIDs,
+		KeyInstanceIDs: []string{},
 	}
 
 	var result UnlockContainerResponse
@@ -128,11 +102,11 @@ func (p *PsyNetRPC) UnlockContainer(ctx context.Context, playerID PlayerID, inst
 	if err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return result.Drops, nil
 }
 
-// TradeIn trades in multiple items for new items of higher rarity.
-func (p *PsyNetRPC) TradeIn(ctx context.Context, playerID PlayerID, productInstances []string) (*TradeInResponse, error) {
+// TradeIn trades in multiple items for new items.
+func (p *PsyNetRPC) TradeIn(ctx context.Context, playerID PlayerID, productInstances []string) ([]Product, error) {
 	request := TradeInRequest{
 		PlayerID:         playerID,
 		ProductInstances: productInstances,
@@ -143,13 +117,12 @@ func (p *PsyNetRPC) TradeIn(ctx context.Context, playerID PlayerID, productInsta
 	if err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return result.Drops, nil
 }
 
-// GetCrossEntitlementProductStatus retrieves cross-platform product entitlement status.
 func (p *PsyNetRPC) GetCrossEntitlementProductStatus(ctx context.Context) (*GetProductStatusResponse, error) {
 	var result GetProductStatusResponse
-	err := p.sendRequestSync(ctx, "Products/CrossEntitlement/GetProductStatus v1", map[string]interface{}{}, &result)
+	err := p.sendRequestSync(ctx, "Products/CrossEntitlement/GetProductStatus v1", emptyRequest{}, &result)
 	if err != nil {
 		return nil, err
 	}
