@@ -5,7 +5,7 @@ import "context"
 // RocketPassInfo represents information about a player's Rocket Pass progress
 type RocketPassInfo struct {
 	TierLevel    int     `json:"TierLevel"`
-	BOwnsPremium bool    `json:"bOwnsPremium"`
+	OwnsPremium  bool    `json:"bOwnsPremium"`
 	XPMultiplier float64 `json:"XPMultiplier"`
 	Pips         int     `json:"Pips"`
 	PipsPerLevel int     `json:"PipsPerLevel"`
@@ -39,10 +39,10 @@ type RocketPassBundle struct {
 	ImageURL             *string `json:"ImageUrl"`
 }
 
-// RocketPassReward represents rewards available at specific tiers
+// RocketPassReward represents rewards available at specified tiers
 type RocketPassReward struct {
 	Tier          int            `json:"Tier"`
-	ProductData   []ProductData  `json:"ProductData"`
+	ProductData   []Product      `json:"ProductData"`
 	XPRewards     []XPReward     `json:"XPRewards"`
 	CurrencyDrops []CurrencyDrop `json:"CurrencyDrops"`
 }
@@ -60,27 +60,10 @@ type CurrencyDrop struct {
 	Amount     int `json:"Amount"`
 }
 
-// RocketPassPlayerInfo represents a player's complete Rocket Pass information
-type RocketPassPlayerInfo struct {
-	StartTime       int64           `json:"StartTime"`
-	EndTime         int64           `json:"EndTime"`
-	RocketPassInfo  RocketPassInfo  `json:"RocketPassInfo"`
-	RocketPassStore RocketPassStore `json:"RocketPassStore"`
-}
-
-// RocketPassRewardContent represents the reward content for a Rocket Pass
-type RocketPassRewardContent struct {
-	TierCap         int                `json:"TierCap"`
-	FreeMaxLevel    int                `json:"FreeMaxLevel"`
-	PremiumMaxLevel int                `json:"PremiumMaxLevel"`
-	FreeRewards     []RocketPassReward `json:"FreeRewards"`
-	PremiumRewards  []RocketPassReward `json:"PremiumRewards"`
-}
-
 // PrestigeReward represents a prestige reward in Rocket Pass
 type PrestigeReward struct {
 	Level       int           `json:"Level"`
-	ProductData []ProductData `json:"ProductData"`
+	ProductData []Product     `json:"ProductData"`
 	Currency    []interface{} `json:"Currency"`
 }
 
@@ -92,8 +75,8 @@ type GetPlayerInfoRequest struct {
 }
 
 type GetPlayerInfoResponse struct {
-	StartTime       int64           `json:"StartTime"`
-	EndTime         int64           `json:"EndTime"`
+	StartTime       int             `json:"StartTime"`
+	EndTime         int             `json:"EndTime"`
 	RocketPassInfo  RocketPassInfo  `json:"RocketPassInfo"`
 	RocketPassStore RocketPassStore `json:"RocketPassStore"`
 }
@@ -122,7 +105,7 @@ type GetPlayerPrestigeRewardsResponse struct {
 	PrestigeRewards []PrestigeReward `json:"PrestigeRewards"`
 }
 
-// GetPlayerInfo retrieves Rocket Pass information for a specific player.
+// GetRocketPassPlayerInfo retrieves Rocket Pass information for the authenticated player.
 func (p *PsyNetRPC) GetRocketPassPlayerInfo(ctx context.Context, playerID PlayerID, rocketPassID int) (*GetPlayerInfoResponse, error) {
 	request := GetPlayerInfoRequest{
 		PlayerID:        playerID,
@@ -139,7 +122,7 @@ func (p *PsyNetRPC) GetRocketPassPlayerInfo(ctx context.Context, playerID Player
 	return &result, nil
 }
 
-// GetRewardContent retrieves the reward content for a specific Rocket Pass.
+// GetRocketPassRewardContent retrieves the reward content for the given Rocket Pass.
 func (p *PsyNetRPC) GetRocketPassRewardContent(ctx context.Context, rocketPassID, tierCap, freeMaxLevel, premiumMaxLevel int) (*GetRewardContentResponse, error) {
 	request := GetRewardContentRequest{
 		RocketPassID:    rocketPassID,
@@ -156,8 +139,8 @@ func (p *PsyNetRPC) GetRocketPassRewardContent(ctx context.Context, rocketPassID
 	return &result, nil
 }
 
-// GetPlayerPrestigeRewards retrieves prestige rewards for a player's Rocket Pass.
-func (p *PsyNetRPC) GetPlayerPrestigeRewards(ctx context.Context, playerID PlayerID, rocketPassID int) (*GetPlayerPrestigeRewardsResponse, error) {
+// GetRocketPassPrestigeRewards retrieves prestige rewards for the authenticated player's Rocket Pass.
+func (p *PsyNetRPC) GetRocketPassPrestigeRewards(ctx context.Context, playerID PlayerID, rocketPassID int) ([]PrestigeReward, error) {
 	request := GetPlayerPrestigeRewardsRequest{
 		PlayerID:     playerID,
 		RocketPassID: rocketPassID,
@@ -168,5 +151,5 @@ func (p *PsyNetRPC) GetPlayerPrestigeRewards(ctx context.Context, playerID Playe
 	if err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return result.PrestigeRewards, nil
 }
