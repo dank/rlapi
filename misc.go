@@ -17,59 +17,19 @@ type Server struct {
 	SubRegion string `json:"SubRegion"`
 }
 
-type PopulationData struct {
-	Playlists []PlaylistPopulation `json:"Playlists"`
-	Timestamp int64                `json:"Timestamp"`
-}
-
-type PlaylistPopulation struct {
-	PlaylistID int `json:"PlaylistID"`
-	Population int `json:"Population"`
-}
-
-type SubRegion struct {
-	RegionID   string   `json:"RegionID"`
-	RegionName string   `json:"RegionName"`
+type Region struct {
+	Region     string   `json:"Region"`
+	Label      string   `json:"Label"`
 	SubRegions []string `json:"SubRegions"`
 }
 
-type TrainingData struct {
-	Packs []TrainingPack `json:"Packs"`
-}
-
-type TrainingPack struct {
-	PackID      string `json:"PackID"`
-	Name        string `json:"Name"`
-	Description string `json:"Description"`
-	CreatorID   string `json:"CreatorID"`
-	Difficulty  int    `json:"Difficulty"`
-}
-
-type TrainingMetadata struct {
-	Categories []TrainingCategory `json:"Categories"`
-}
-
-type TrainingCategory struct {
-	CategoryID   int    `json:"CategoryID"`
-	CategoryName string `json:"CategoryName"`
-}
-
-type GetPopulationResponse struct {
-	Playlists []PlaylistPopulation `json:"Playlists"`
-	Timestamp int64                `json:"Timestamp"`
-}
-
-type UpdatePlayerPlaylistRequest struct {
-	PlayerID   PlayerID `json:"PlayerID"`
-	PlaylistID int      `json:"PlaylistID"`
-}
-
-type UpdatePlayerPlaylistResponse struct {
-	Success bool `json:"Success"`
+type GetSubRegionsRequest struct {
+	RequestRegions []interface{} `json:"RequestRegions"`
+	Regions        []interface{} `json:"Regions"`
 }
 
 type GetSubRegionsResponse struct {
-	Regions []SubRegion `json:"Regions"`
+	Regions []Region `json:"Regions"`
 }
 
 type GetGameServerPingListRequest struct {
@@ -84,30 +44,10 @@ type GetClubPrivateMatchesResponse struct {
 	Servers []Server `json:"Servers"`
 }
 
-type BrowseTrainingDataRequest struct {
-	CategoryID *int    `json:"CategoryID,omitempty"`
-	Search     *string `json:"Search,omitempty"`
-	Limit      int     `json:"Limit"`
-	Offset     int     `json:"Offset"`
-}
-
-type BrowseTrainingDataResponse struct {
-	Packs []TrainingPack `json:"Packs"`
-	Total int            `json:"Total"`
-}
-
-type GetTrainingMetadataResponse struct {
-	Categories []TrainingCategory `json:"Categories"`
-}
-
 type JoinMatchRequest struct {
-	MatchID  string   `json:"MatchID"`
-	PlayerID PlayerID `json:"PlayerID"`
-}
-
-type JoinMatchResponse struct {
-	Success    bool   `json:"Success"`
-	ServerInfo string `json:"ServerInfo"`
+	JoinType   string `json:"JoinType"`
+	ServerName string `json:"ServerName"`
+	Password   string `json:"Password"`
 }
 
 type FilterContentRequest struct {
@@ -120,12 +60,17 @@ type FilterContentResponse struct {
 }
 
 type RecordMetricsRequest struct {
-	PlayerID PlayerID               `json:"PlayerID"`
-	Metrics  map[string]interface{} `json:"Metrics"`
-}
-
-type RecordMetricsResponse struct {
-	Success bool `json:"Success"`
+	AppSessionID       string  `json:"AppSessionID"`
+	LevelSessionID     string  `json:"LevelSessionID"`
+	CurrentTimeSeconds float64 `json:"CurrentTimeSeconds"`
+	FirstEventIndex    int     `json:"FirstEventIndex"`
+	Events             []struct {
+		PlayerID    PlayerID `json:"PlayerID,omitempty"`
+		TimeSeconds float64  `json:"TimeSeconds"`
+		Version     int      `json:"Version"`
+		EventName   string   `json:"EventName"`
+		EventData   string   `json:"EventData"`
+	} `json:"Events"`
 }
 
 type GetTradeInFiltersResponse struct {
@@ -133,56 +78,63 @@ type GetTradeInFiltersResponse struct {
 }
 
 type RelayToServerRequest struct {
-	ServerID string      `json:"ServerID"`
-	Message  interface{} `json:"Message"`
-}
-
-type RelayToServerResponse struct {
-	Success  bool        `json:"Success"`
-	Response interface{} `json:"Response"`
+	DSConnectToken string `json:"DSConnectToken"`
+	ReservationID  string `json:"ReservationID"`
+	MessageType    string `json:"MessageType"`
+	MessagePayload struct {
+		Settings struct {
+			MatchType        int    `json:"MatchType"`
+			PlaylistID       int    `json:"PlaylistID"`
+			BFriendJoin      bool   `json:"bFriendJoin"`
+			BMigration       bool   `json:"bMigration"`
+			BRankedReconnect bool   `json:"bRankedReconnect"`
+			Password         string `json:"Password"`
+		} `json:"Settings"`
+		MapPrefs []struct {
+			PlayerID    string `json:"PlayerID"`
+			MapLikes    []int  `json:"MapLikes"`
+			MapDislikes []int  `json:"MapDislikes"`
+		} `json:"MapPrefs"`
+		Players []struct {
+			PlayerID      string  `json:"PlayerID"`
+			PlayerName    string  `json:"PlayerName"`
+			SkillMu       float64 `json:"SkillMu"`
+			SkillSigma    float64 `json:"SkillSigma"`
+			Tier          int     `json:"Tier"`
+			BRemotePlayer bool    `json:"bRemotePlayer"`
+			Loadout       []int   `json:"Loadout"`
+			MapLikes      []int   `json:"MapLikes"`
+			MapDislikes   []int   `json:"MapDislikes"`
+			ClubID        int     `json:"ClubID"`
+		} `json:"Players"`
+		PartyLeaderID     string `json:"PartyLeaderID"`
+		ReservationID     string `json:"ReservationID"`
+		BDisableCrossPlay bool   `json:"bDisableCrossPlay"`
+	} `json:"MessagePayload"`
 }
 
 type CanShowAvatarRequest struct {
-	PlayerID PlayerID `json:"PlayerID"`
+	PlayerIDs []PlayerID `json:"PlayerIDs"`
 }
 
 type CanShowAvatarResponse struct {
-	CanShow bool `json:"CanShow"`
+	AllowedPlayerIDs []PlayerID `json:"AllowedPlayerIDs"`
+	HiddenPlayerIDs  []PlayerID `json:"HiddenPlayerIDs"`
 }
 
-// GetPopulation retrieves current playlist population data.
-func (p *PsyNetRPC) GetPopulation(ctx context.Context) (*GetPopulationResponse, error) {
-	var result GetPopulationResponse
-	err := p.sendRequestSync(ctx, "Population/GetPopulation v1", emptyRequest{}, &result)
-	if err != nil {
-		return nil, err
-	}
-	return &result, nil
-}
-
-// UpdatePlayerPlaylist updates a player's playlist preference.
-func (p *PsyNetRPC) UpdatePlayerPlaylist(ctx context.Context, playerID PlayerID, playlistID int) (*UpdatePlayerPlaylistResponse, error) {
-	request := UpdatePlayerPlaylistRequest{
-		PlayerID:   playerID,
-		PlaylistID: playlistID,
+// GetSubRegions retrieves available server regions.
+func (p *PsyNetRPC) GetSubRegions(ctx context.Context) ([]Region, error) {
+	request := GetSubRegionsRequest{
+		RequestRegions: []interface{}{},
+		Regions:        []interface{}{},
 	}
 
-	var result UpdatePlayerPlaylistResponse
-	err := p.sendRequestSync(ctx, "Population/UpdatePlayerPlaylist v1", request, &result)
-	if err != nil {
-		return nil, err
-	}
-	return &result, nil
-}
-
-// GetSubRegions retrieves available sub-regions.
-func (p *PsyNetRPC) GetSubRegions(ctx context.Context) (*GetSubRegionsResponse, error) {
 	var result GetSubRegionsResponse
-	err := p.sendRequestSync(ctx, "Regions/GetSubRegions v1", emptyRequest{}, &result)
+	err := p.sendRequestSync(ctx, "Regions/GetSubRegions v1", request, &result)
 	if err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return result.Regions, nil
 }
 
 // GetGameServerPingList retrieves ping information for game servers.
@@ -205,46 +157,20 @@ func (p *PsyNetRPC) GetClubPrivateMatches(ctx context.Context) ([]Server, error)
 	return result.Servers, nil
 }
 
-// BrowseTrainingData searches for training packs.
-func (p *PsyNetRPC) BrowseTrainingData(ctx context.Context, categoryID *int, search *string, limit, offset int) (*BrowseTrainingDataResponse, error) {
-	request := BrowseTrainingDataRequest{
-		CategoryID: categoryID,
-		Search:     search,
-		Limit:      limit,
-		Offset:     offset,
-	}
-
-	var result BrowseTrainingDataResponse
-	err := p.sendRequestSync(ctx, "Training/BrowseTrainingData v1", request, &result)
-	if err != nil {
-		return nil, err
-	}
-	return &result, nil
-}
-
-// GetTrainingMetadata retrieves training metadata including categories.
-func (p *PsyNetRPC) GetTrainingMetadata(ctx context.Context) (*GetTrainingMetadataResponse, error) {
-	var result GetTrainingMetadataResponse
-	err := p.sendRequestSync(ctx, "Training/GetTrainingMetadata v1", emptyRequest{}, &result)
-	if err != nil {
-		return nil, err
-	}
-	return &result, nil
-}
-
-// JoinMatch joins a specific match.
-func (p *PsyNetRPC) JoinMatch(ctx context.Context, matchID string, playerID PlayerID) (*JoinMatchResponse, error) {
+// JoinMatch joins a private match.
+func (p *PsyNetRPC) JoinMatch(ctx context.Context, joinType, serverName, password string) (interface{}, error) {
 	request := JoinMatchRequest{
-		MatchID:  matchID,
-		PlayerID: playerID,
+		JoinType:   joinType,
+		ServerName: serverName,
+		Password:   password,
 	}
 
-	var result JoinMatchResponse
+	var result interface{}
 	err := p.sendRequestSync(ctx, "Reservations/JoinMatch v1", request, &result)
 	if err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return result, nil
 }
 
 func (p *PsyNetRPC) FilterContent(ctx context.Context, content []string, policy string) ([]string, error) {
@@ -261,19 +187,13 @@ func (p *PsyNetRPC) FilterContent(ctx context.Context, content []string, policy 
 	return result.FilteredContent, nil
 }
 
-// RecordMetrics records player metrics.
-func (p *PsyNetRPC) RecordMetrics(ctx context.Context, playerID PlayerID, metrics map[string]interface{}) (*RecordMetricsResponse, error) {
-	request := RecordMetricsRequest{
-		PlayerID: playerID,
-		Metrics:  metrics,
-	}
-
-	var result RecordMetricsResponse
+func (p *PsyNetRPC) RecordMetrics(ctx context.Context, request *RecordMetricsRequest) error {
+	var result interface{}
 	err := p.sendRequestSync(ctx, "Metrics/RecordMetrics v1", request, &result)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return &result, nil
+	return nil
 }
 
 // GetTradeInFilters retrieves trade-in filters.
@@ -286,25 +206,19 @@ func (p *PsyNetRPC) GetTradeInFilters(ctx context.Context) ([]TradeInFilter, err
 	return result.TradeInFilters, nil
 }
 
-// RelayToServer relays a message to a game server.
-func (p *PsyNetRPC) RelayToServer(ctx context.Context, serverID string, message interface{}) (*RelayToServerResponse, error) {
-	request := RelayToServerRequest{
-		ServerID: serverID,
-		Message:  message,
-	}
-
-	var result RelayToServerResponse
+func (p *PsyNetRPC) RelayToServer(ctx context.Context, request *RelayToServerRequest) error {
+	var result interface{}
 	err := p.sendRequestSync(ctx, "DSR/RelayToServer v1", request, &result)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return &result, nil
+	return nil
 }
 
-// CanShowAvatar checks if a player's avatar can be shown.
-func (p *PsyNetRPC) CanShowAvatar(ctx context.Context, playerID PlayerID) (*CanShowAvatarResponse, error) {
+// CanShowAvatar checks if players' avatars can be shown.
+func (p *PsyNetRPC) CanShowAvatar(ctx context.Context, playerIDs []PlayerID) (*CanShowAvatarResponse, error) {
 	request := CanShowAvatarRequest{
-		PlayerID: playerID,
+		PlayerIDs: playerIDs,
 	}
 
 	var result CanShowAvatarResponse
