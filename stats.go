@@ -2,13 +2,7 @@ package rlapi
 
 import "context"
 
-// StatLeaderboard represents a statistical leaderboard
-type StatLeaderboard struct {
-	LeaderboardID string                    `json:"LeaderboardID"`
-	Platforms     []StatPlatformLeaderboard `json:"Platforms"`
-}
-
-// StatPlatformLeaderboard represents leaderboard data for a specific platform
+// StatPlatformLeaderboard represents leaderboard data for a given platform
 type StatPlatformLeaderboard struct {
 	Platform string                  `json:"Platform"`
 	Players  []StatLeaderboardPlayer `json:"Players"`
@@ -22,7 +16,6 @@ type StatLeaderboardPlayer struct {
 	Rank       int      `json:"Rank"`
 }
 
-// StatLeaderboardRankPlayer represents a player's rank data
 type StatLeaderboardRankPlayer struct {
 	PlayerID   PlayerID `json:"PlayerID"`
 	PlayerName string   `json:"PlayerName"`
@@ -31,8 +24,8 @@ type StatLeaderboardRankPlayer struct {
 }
 
 type GetStatLeaderboardRequest struct {
-	StatName          string `json:"StatName"`
-	BDisableCrossplay bool   `json:"bDisableCrossplay"`
+	Stat             string `json:"Stat"`
+	DisableCrossplay bool   `json:"bDisableCrossplay"`
 }
 
 type GetStatLeaderboardResponse struct {
@@ -41,19 +34,19 @@ type GetStatLeaderboardResponse struct {
 }
 
 type GetStatLeaderboardValueForUserRequest struct {
-	StatName string   `json:"StatName"`
+	Stat     string   `json:"Stat"`
 	PlayerID PlayerID `json:"PlayerID"`
 }
 
 type GetStatLeaderboardValueForUserResponse struct {
-	LeaderboardID string  `json:"LeaderboardID"`
-	BHasStat      bool    `json:"bHasStat"`
-	Value         float64 `json:"Value"`
-	Rank          int     `json:"Rank"`
+	LeaderboardID string `json:"LeaderboardID"`
+	HasStat       bool   `json:"bHasStat"`
+	Value         string `json:"Value"`
+	Rank          int    `json:"Rank"`
 }
 
 type GetStatLeaderboardRankForUsersRequest struct {
-	StatName  string     `json:"StatName"`
+	Stat      string     `json:"Stat"`
 	PlayerIDs []PlayerID `json:"PlayerIDs"`
 }
 
@@ -62,11 +55,11 @@ type GetStatLeaderboardRankForUsersResponse struct {
 	Players       []StatLeaderboardRankPlayer `json:"Players"`
 }
 
-// GetStatLeaderboard retrieves the statistical leaderboard for a specific stat.
+// GetStatLeaderboard retrieves the stats leaderboard for a given stat.
 func (p *PsyNetRPC) GetStatLeaderboard(ctx context.Context, statName string, disableCrossplay bool) (*GetStatLeaderboardResponse, error) {
 	request := GetStatLeaderboardRequest{
-		StatName:          statName,
-		BDisableCrossplay: disableCrossplay,
+		Stat:             statName,
+		DisableCrossplay: disableCrossplay,
 	}
 
 	var result GetStatLeaderboardResponse
@@ -77,10 +70,10 @@ func (p *PsyNetRPC) GetStatLeaderboard(ctx context.Context, statName string, dis
 	return &result, nil
 }
 
-// GetStatLeaderboardValueForUser retrieves a specific player's position and data on a stat leaderboard.
+// GetStatLeaderboardValueForUser retrieves a player's position and data on a stat leaderboard.
 func (p *PsyNetRPC) GetStatLeaderboardValueForUser(ctx context.Context, statName string, playerID PlayerID) (*GetStatLeaderboardValueForUserResponse, error) {
 	request := GetStatLeaderboardValueForUserRequest{
-		StatName: statName,
+		Stat:     statName,
 		PlayerID: playerID,
 	}
 
@@ -92,10 +85,9 @@ func (p *PsyNetRPC) GetStatLeaderboardValueForUser(ctx context.Context, statName
 	return &result, nil
 }
 
-// GetStatLeaderboardRankForUsers retrieves rank information for multiple players on a stat leaderboard.
 func (p *PsyNetRPC) GetStatLeaderboardRankForUsers(ctx context.Context, statName string, playerIDs []PlayerID) (*GetStatLeaderboardRankForUsersResponse, error) {
 	request := GetStatLeaderboardRankForUsersRequest{
-		StatName:  statName,
+		Stat:      statName,
 		PlayerIDs: playerIDs,
 	}
 
