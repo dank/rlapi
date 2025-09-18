@@ -27,11 +27,17 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },
 }
 
-func logHTTP(isResp bool, method, path, status string, body []byte) {
+func logHTTP(isResp bool, method, path, status string, headers http.Header, body []byte) {
 	if isResp {
 		log.Printf("<<< HTTP: %s", status)
 	} else {
 		log.Printf(">>> HTTP: %s %s", method, path)
+	}
+	if len(headers) > 0 {
+		log.Printf("    Headers:")
+		for k, v := range headers {
+			log.Printf("      %s: %s", k, strings.Join(v, ", "))
+		}
 	}
 	if len(body) > 0 {
 		log.Printf("    Body: %s", string(body))
@@ -82,7 +88,7 @@ func main() {
 				body, _ = io.ReadAll(req.Body)
 				req.Body = io.NopCloser(bytes.NewReader(body))
 			}
-			logHTTP(false, req.Method, req.URL.Path, "", body)
+			logHTTP(false, req.Method, req.URL.Path, "", req.Header, body)
 		},
 		Transport: &http.Transport{
 			// Proxy: http.ProxyURL(proxyURL),
@@ -123,7 +129,7 @@ func main() {
 			resp.ContentLength = int64(len(bodyBytes))
 			resp.Header.Set("Content-Length", fmt.Sprintf("%d", len(bodyBytes)))
 
-			logHTTP(true, "", "", resp.Status, bodyBytes)
+			logHTTP(true, "", "", resp.Status, resp.Header, bodyBytes)
 			return nil
 		},
 	}

@@ -1,19 +1,19 @@
-const rl = Process.findModuleByName("RocketLeague.exe");
-if (!rl) {
-    throw new Error("RocketLeague.exe not found");
-}
+const rl = Process.findModuleByName("RocketLeague.exe")!;
 
 console.log(`RocketLeague.exe: ${rl.base}`);
 
-// Epic
-const curlEasyInit = rl.base.add(0x1642240); // 48 83 EC ?? 83 3D ?? ?? ?? ?? ?? 0F 85 8D 
-const curlSetOpts = rl.base.add(0x1644740); // 89 54 24 ?? 4C 89 44 24 ?? 4C 89 4C 24 ?? 48 83 EC ?? 48 85
-const x509VerifyCert = rl.base.add(0x11795B0); // 40 53 57 B8 ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 2B E0 48 8B D9
+function findPattern(pattern: string): NativePointer {
+    const result = Memory.scanSync(rl.base, rl.size, pattern);
+    if (result.length === 0) {
+        throw new Error(`Pattern not found: ${pattern}`);
+    }
+    console.log(`[+] Found pattern ${pattern} at: ${result[0].address}`);
+    return result[0].address;
+}
 
-// Steam
-// const curlEasyInit = rl.base.add(0x1693630);
-// const curlSetOpts = rl.base.add(0x1695B30);
-// const x509VerifyCert = rl.base.add(0x11CA9A0);
+const curlEasyInit = findPattern("48 83 EC ?? 83 3D ?? ?? ?? ?? ?? 0F 85 8D");
+const curlSetOpts = findPattern("89 54 24 ?? 4C 89 44 24 ?? 4C 89 4C 24 ?? 48 83 EC ?? 48 85");
+const x509VerifyCert = findPattern("40 53 57 B8 ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 2B E0 48 8B D9");
 
 Interceptor.attach(curlEasyInit, {
     onLeave(retval) {
