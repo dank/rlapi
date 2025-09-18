@@ -1,6 +1,6 @@
 # _rlapi_
-![GitHub Release](https://img.shields.io/github/v/release/dank/rlapi)
 [![Go Reference](https://img.shields.io/static/v1?label=godoc&message=reference&color=blue)](https://pkg.go.dev/github.com/dank/rlapi)
+![GitHub Release](https://img.shields.io/github/v/tag/dank/rlapi)
 ![GitHub License](https://img.shields.io/github/license/dank/rlapi)
 
 ### [ITEM SHOP DEMO](https://rl.guac.net)
