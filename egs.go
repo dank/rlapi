@@ -160,7 +160,7 @@ func (e *EGS) GetExchangeCode(accessToken string) (string, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("unexpected status code: %s", resp.Status)
+		return "", fmt.Errorf("unexpected status code %s: %s", resp.Status, string(body))
 	}
 
 	var tokenResp struct {
@@ -204,7 +204,7 @@ func (e *EGS) requestEOSToken(params map[string]string) (*EOSTokenResponse, erro
 		form.Set(k, v)
 	}
 	form.Set("deployment_id", eosDeploymentID)
-	form.Set("scope", "basic_profile+friends_list+presence+friends_management+openid")
+	form.Set("scope", "basic_profile")
 
 	req, err := http.NewRequest("POST", "https://api.epicgames.dev/epic/oauth/v2/token", strings.NewReader(form.Encode()))
 	if err != nil {
@@ -227,8 +227,7 @@ func (e *EGS) requestEOSToken(params map[string]string) (*EOSTokenResponse, erro
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %s", resp.Status)
-
+		return nil, fmt.Errorf("unexpected status code %s: %s", resp.Status, string(body))
 	}
 
 	var tokenResp EOSTokenResponse
