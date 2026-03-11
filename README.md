@@ -3,7 +3,7 @@
 ![GitHub Release](https://img.shields.io/github/v/tag/dank/rlapi)
 ![GitHub License](https://img.shields.io/github/license/dank/rlapi)
 
-### [ITEM SHOP DEMO](https://rl.guac.net)
+### [ITEM SHOP DEMO](https://rlshop.gg)
 
 _rlapi_ is a reverse engineered collection of Rocket League's internal APIs with a Go SDK. It provides a full end-to-end flow, from authentication to accessing the item shop, player stats, inventory, match history, replays, and more. This repository also contains resources for reverse engineering and analyzing Rocket League network traffic, serving as a foundation for further exploration. Not all endpoints are fully documented—do not ask about specific ones, as I probably don't know.
 
