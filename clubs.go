@@ -237,13 +237,18 @@ func (p *PsyNetRPC) UpdateClub(ctx context.Context, request *UpdateClubRequest) 
 }
 
 // GetClubStats retrieves statistics for the current player's club.
-func (p *PsyNetRPC) GetClubStats(ctx context.Context) (*ClubStatsData, error) {
-	var result GetStatsResponse
-	err := p.sendRequestSync(ctx, "Clubs/GetStats v1", &emptyRequest{}, &result)
+// Note: We pass PlayerID in the request because PsyNet often returns zeros for empty requests.
+func (p *PsyNetRPC) GetClubStats(ctx context.Context, playerID PlayerID) (*ClubStatsData, error) {
+	request := map[string]PlayerID{
+		"PlayerID": playerID,
+	}
+
+	var result ClubStatsData
+	err := p.sendRequestSync(ctx, "Clubs/GetStats v1", request, &result)
 	if err != nil {
 		return nil, err
 	}
-	return &result.Stats, nil
+	return &result, nil
 }
 
 // GetClubTitleInstances retrieves title instances for a club.
