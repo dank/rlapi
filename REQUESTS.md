@@ -277,7 +277,6 @@ Retrieves detailed information about the club that a specific player belongs to.
   }
 }
 ```
-#### Clubs/GetStats v1
 #### Clubs/InviteToClub v4
 Invites a player to join the club.
 

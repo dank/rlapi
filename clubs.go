@@ -101,14 +101,6 @@ type ClubSeasonalTitle struct {
 	Title string `json:"Title"`
 }
 
-// ClubStatsData represents the complete statistics data for a club member
-type ClubStatsData struct {
-	CareerStats            ClubCareerStats     `json:"CareerStats"`
-	SeasonalStats          []ClubSeasonalStat  `json:"SeasonalStats"`
-	PreviousSeasonalBadges []interface{}       `json:"PreviousSeasonalBadges"`
-	SeasonalTitles         []ClubSeasonalTitle `json:"SeasonalTitles"`
-}
-
 type GetClubDetailsRequest struct {
 	ClubID ClubID `json:"ClubID"`
 }
@@ -165,12 +157,12 @@ type AcceptClubInviteResponse struct {
 	ClubDetails ClubDetails `json:"ClubDetails"`
 }
 
-type LeaveClubRequest struct {
-	ClubID ClubID `json:"ClubID"`
-}
-
+// GetStatsResponse represents the complete statistics data for a club member
 type GetStatsResponse struct {
-	Stats ClubStatsData `json:"Stats"`
+	CareerStats            ClubCareerStats     `json:"CareerStats"`
+	SeasonalStats          []ClubSeasonalStat  `json:"SeasonalStats"`
+	PreviousSeasonalBadges []interface{}       `json:"PreviousSeasonalBadges"`
+	SeasonalTitles         []ClubSeasonalTitle `json:"SeasonalTitles"`
 }
 
 type GetClubTitleInstancesResponse struct {
@@ -237,14 +229,9 @@ func (p *PsyNetRPC) UpdateClub(ctx context.Context, request *UpdateClubRequest) 
 }
 
 // GetClubStats retrieves statistics for the current player's club.
-// Note: We pass PlayerID in the request because PsyNet often returns zeros for empty requests.
-func (p *PsyNetRPC) GetClubStats(ctx context.Context, playerID PlayerID) (*ClubStatsData, error) {
-	request := map[string]PlayerID{
-		"PlayerID": playerID,
-	}
-
-	var result ClubStatsData
-	err := p.sendRequestSync(ctx, "Clubs/GetStats v1", request, &result)
+func (p *PsyNetRPC) GetClubStats(ctx context.Context) (*GetStatsResponse, error) {
+	var result GetStatsResponse
+	err := p.sendRequestSync(ctx, "Clubs/GetStats v1", &emptyRequest{}, &result)
 	if err != nil {
 		return nil, err
 	}
