@@ -18,6 +18,7 @@ const (
 	egsOAuthURL     = "account-public-service-prod03.ol.epicgames.com"
 	eosAuthHeader   = "eHl6YTc4OTFwNUQ3czlSNkdtNm1vVEhXR2xvZXJwN0I6S25oMThkdTROVmxGcyszdVErWlBwRENWdG8wV1lmNHlYUDgrT2N3VnQxbw=="
 	eosDeploymentID = "da32ae9c12ae40e8a112c52e1f17f3ba" // Rocket League
+	eosClientID     = "xyza7891p5D7s9R6Gm6moTHWGloerp7B"
 )
 
 type TokenResponse struct {
@@ -53,6 +54,14 @@ type EOSTokenResponse struct {
 	MergedAccounts    []string `json:"merged_accounts"`
 	ACR               string   `json:"acr"`
 	AuthTime          string   `json:"auth_time"`
+}
+
+type DeviceAuthResponse struct {
+	UserCode        string `json:"user_code"`
+	DeviceCode      string `json:"device_code"`
+	VerificationURI string `json:"verification_uri"`
+	ExpiresIn       int    `json:"expires_in"`
+	Interval        int    `json:"interval"`
 }
 
 // EGS provides an authentication layer for Epic Games Store -- largely adapted from https://github.com/derrod/legendary
@@ -262,4 +271,46 @@ func (e *EGS) RevokeEOSToken(accessToken string) error {
 	}
 
 	return nil
+}
+
+// AuthenticateWithDeviceCode initiates the EOS device authorization flow
+func (e *EGS) AuthenticateWithDeviceCode() (*DeviceAuthResponse, error) {
+	req, err := http.NewRequest("POST", "https://api.epicgames.dev/epic/oauth/v2/deviceAuthorization", strings.NewReader("client_id="+eosClientID))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Authorization", "Basic "+eosAuthHeader)
+	req.Header.Set("User-Agent", egsUserAgent)
+
+	resp, err := e.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to send request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code %s: %s", resp.Status, string(body))
+	}
+
+	var deviceAuthResp DeviceAuthResponse
+	if err := json.Unmarshal(body, &deviceAuthResp); err != nil {
+		return nil, fmt.Errorf("failed to parse response: %w", err)
+	}
+
+	return &deviceAuthResp, nil
+}
+
+// PollEOSToken polls the token endpoint with a device code to get an EOS token
+func (e *EGS) PollEOSToken(deviceCode string) (*EOSTokenResponse, error) {
+	return e.requestEOSToken(map[string]string{
+		"grant_type":  "device_code",
+		"device_code": deviceCode,
+	})
 }
