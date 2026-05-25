@@ -10,7 +10,6 @@ type requestIDCounter struct {
 }
 
 func (r *requestIDCounter) getID() string {
-	id := atomic.LoadInt64(&r.value)
-	atomic.AddInt64(&r.value, 1)
+	id := atomic.AddInt64(&r.value, 1) - 1
 	return fmt.Sprintf("PsyNetMessage_X_%d", id)
 }

@@ -1,22 +1,38 @@
 package rlapi
 
 import (
+	"sync"
 	"testing"
 )
 
-func TestRequestIDIncrementing(t *testing.T) {
-	requestID := requestIDCounter{}
-	id0 := requestID.getID()
-	id1 := requestID.getID()
-	id2 := requestID.getID()
+func TestRequestID(t *testing.T) {
+	counter := requestIDCounter{}
 
-	if id0 != "PsyNetMessage_X_0" {
-		t.Errorf("Expected PsyNetMessage_X_0, got %s", id0)
+	if id := counter.getID(); id != "PsyNetMessage_X_0" {
+		t.Fatalf("expected PsyNetMessage_X_0, got %s", id)
 	}
-	if id1 != "PsyNetMessage_X_1" {
-		t.Errorf("Expected PsyNetMessage_X_1, got %s", id1)
+	if id := counter.getID(); id != "PsyNetMessage_X_1" {
+		t.Fatalf("expected PsyNetMessage_X_1, got %s", id)
 	}
-	if id2 != "PsyNetMessage_X_2" {
-		t.Errorf("Expected PsyNetMessage_X_2, got %s", id2)
+
+	const n = 50
+	results := make([]string, n)
+	var wg sync.WaitGroup
+	wg.Add(n)
+	for i := 0; i < n; i++ {
+		i := i
+		go func() {
+			defer wg.Done()
+			results[i] = counter.getID()
+		}()
+	}
+	wg.Wait()
+
+	seen := make(map[string]bool, n)
+	for _, id := range results {
+		if seen[id] {
+			t.Errorf("duplicate request ID: %s", id)
+		}
+		seen[id] = true
 	}
 }
