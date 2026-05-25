@@ -20,7 +20,6 @@ const (
 	baseURL      = "https://api.rlpp.psynet.gg/rpc"
 	gameVersion  = "260506.26700.517210"
 	featureSet   = "PrimeUpdate58_1"
-	psyBuildId   = "-1652286008"
 	psySigKey    = "c338bd36fb8c42b1a431d30add939fc7"
 	pingInterval = 20 * time.Second
 	pongTimeout  = 10 * time.Second
@@ -83,7 +82,7 @@ func (p *PsyNet) establishSocket(url string, playerID PlayerID, psyToken string,
 
 	dialer := websocket.Dialer{}
 	conn, _, err := dialer.Dial(url, http.Header{
-		"PsyBuildID":     []string{psyBuildId},
+		"PsyBuildID":     []string{psyBuildID},
 		"User-Agent":     []string{fmt.Sprintf("RL Win/%s gzip", gameVersion)},
 		"PsyEnvironment": []string{"Prod"},
 		"PsyToken":       []string{psyToken},
@@ -113,7 +112,7 @@ func (p *PsyNet) postJSON(path []string, params interface{}, result interface{})
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("User-Agent", fmt.Sprintf("RL Win/%s gzip (x86_64-pc-win32) curl-7.67.0 Schannel", gameVersion))
-	req.Header.Set("PsyBuildID", psyBuildId)
+	req.Header.Set("PsyBuildID", psyBuildID)
 	req.Header.Set("PsyEnvironment", "Prod")
 	req.Header.Set("PsyRequestID", p.requestID.getID())
 	req.Header.Set("PsySig", generatePsySig(body))
