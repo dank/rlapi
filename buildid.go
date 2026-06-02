@@ -1,9 +1,5 @@
 package rlapi
 
-import "strconv"
-
-var psyBuildID = strconv.Itoa(int(decodeBuildID(gameVersion)))
-
 func decodeBuildID(s string) int32 {
 	buf := make([]byte, 0, len(s)*2)
 	for _, r := range s {
