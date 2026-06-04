@@ -1,0 +1,57 @@
+name: Update version
+
+on:
+  repository_dispatch:
+    types: [ update_version ]
+
+jobs:
+  update-version:
+    runs-on: ubuntu-slim
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate inputs
+        env:
+          GAME_VERSION: ${{ github.event.client_payload.game_version }}
+          FEATURE_SET: ${{ github.event.client_payload.feature_set }}
+        run: |
+          if [ -z "$GAME_VERSION" ] || [ -z "$FEATURE_SET" ]; then
+            echo "Error: game_version and feature_set must not be empty"
+            exit 1
+          fi
+
+      - name: Update constants in psynet.go
+        env:
+          GAME_VERSION: ${{ github.event.client_payload.game_version }}
+          FEATURE_SET: ${{ github.event.client_payload.feature_set }}
+        run: |
+          sed -i "s/gameVersion\s*=\s*\"[^\"]*\"/gameVersion  = \"$GAME_VERSION\"/" psynet.go
+          sed -i "s/featureSet\s*=\s*\"[^\"]*\"/featureSet   = \"$FEATURE_SET\"/" psynet.go
+
+      - name: Check for diff
+        run: |
+          if git diff --quiet; then
+            echo "No diff detected, version already up to date"
+            exit 0
+          fi
+
+      - name: Create branch and PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GAME_VERSION: ${{ github.event.client_payload.game_version }}
+          FEATURE_SET: ${{ github.event.client_payload.feature_set }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          BRANCH="version/${GAME_VERSION}-${FEATURE_SET}"
+          git checkout -b "$BRANCH"
+          git add psynet.go
+          git commit -m "Bump version to \`$GAME_VERSION\` (\`$FEATURE_SET\`)"
+          git push origin "$BRANCH" --force || true
+          gh pr create \
+            --title "Bump version to \`$GAME_VERSION\` (\`$FEATURE_SET\`)" \
+            --body "Updated \`gameVersion\` to \`$GAME_VERSION\` and \`featureSet\` to \`$FEATURE_SET\`." \
+            --base master || true
