@@ -50,7 +50,7 @@ jobs:
           git checkout -b "$BRANCH"
           git add psynet.go
           git commit -m "Bump version to \`$GAME_VERSION\` (\`$FEATURE_SET\`)"
-          git push origin "$BRANCH" || true
+          git push origin "$BRANCH"
           gh pr create \
             --title "Bump version to \`$GAME_VERSION\` (\`$FEATURE_SET\`)" \
             --body "Updated \`gameVersion\` to \`$GAME_VERSION\` and \`featureSet\` to \`$FEATURE_SET\`." \
