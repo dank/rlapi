@@ -99,6 +99,11 @@ func (p *PsyNet) SetVersion(gameVersion, featureSet string) {
 	p.buildID = strconv.Itoa(int(decodeBuildID(gameVersion)))
 }
 
+// GetVersion returns the current game version and feature set.
+func (p *PsyNet) GetVersion() (gameVersion, featureSet string) {
+	return p.gameVersion, p.featureSet
+}
+
 func (p *PsyNet) establishSocket(url string, playerID PlayerID, psyToken string, sessionID string) (*PsyNetRPC, error) {
 	p.logger.Debug("establishing websocket connection", slog.String("url", url))
 
