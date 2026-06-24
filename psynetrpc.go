@@ -3,8 +3,10 @@ package rlapi
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
+	"net"
 	"strings"
 	"sync"
 	"time"
@@ -199,16 +201,12 @@ func (p *PsyNetRPC) readMessages() {
 	for {
 		_, message, err := p.wsConn.ReadMessage()
 		if err != nil {
-		    p.mu.Lock()
-		    expected := !p.connected
-		    p.mu.Unlock()
-		
-		    if expected {
-		        p.logger.Debug("websocket closed normally", slog.Any("err", err))
-		    } else {
-		        p.logger.Error("failed to read websocket message", slog.Any("err", err))
-		    }
-		    break
+			if errors.Is(err, net.ErrClosed) {
+				p.logger.Debug("websocket closed", slog.Any("err", err))
+			} else {
+				p.logger.Error("failed to read websocket message", slog.Any("err", err))
+			}
+			break
 		}
 
 		if strings.HasPrefix(string(message), "PsyPong:") {
