@@ -19,7 +19,7 @@ import (
 
 const (
 	baseURL      = "https://api.rlpp.psynet.gg/rpc"
-	gameVersion  = "260727.84176.523543"
+	gameVersion  = "260811.1257.524913"
 	featureSet   = "PrimeUpdate59_1"
 	psySigKey    = "c338bd36fb8c42b1a431d30add939fc7"
 	pingInterval = 20 * time.Second
