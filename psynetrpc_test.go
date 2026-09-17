@@ -3,6 +3,7 @@ package rlapi
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -22,6 +23,7 @@ type MockWSServer struct {
 	responses    map[string]*PsyResponse // Predefined responses
 	pongResponse bool                    // Whether to respond to pings with pong
 	dropPongs    bool                    // Whether to drop pong responses
+	closeOnReq   bool                    // Whether to close the connection when a request arrives
 }
 
 func NewMockWSServer() *MockWSServer {
@@ -60,6 +62,10 @@ func (m *MockWSServer) SetDropPongs(drop bool) {
 	m.dropPongs = drop
 }
 
+func (m *MockWSServer) SetCloseOnRequest(closeOnReq bool) {
+	m.closeOnReq = closeOnReq
+}
+
 func (m *MockWSServer) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	conn, err := m.upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -85,6 +91,9 @@ func (m *MockWSServer) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 			// Parse PsyRequestID from the message
 			if strings.Contains(msg, "PsyRequestID:") {
+				if m.closeOnReq {
+					return // drop the connection without answering
+				}
 				lines := strings.Split(msg, "\r\n")
 				for _, line := range lines {
 					if strings.HasPrefix(line, "PsyRequestID:") {
@@ -444,6 +453,90 @@ func TestPsyNetRPC_ConcurrentContextCancellation(t *testing.T) {
 
 	if finalCount != 0 {
 		t.Errorf("Memory leak: %d pending requests remain", finalCount)
+	}
+}
+
+// A request that is still waiting when the connection goes away must
+// get an error back. Close() closes every pending response channel, so
+// the waiting side receives nil from it.
+func TestPsyNetRPC_CloseWithPendingRequest(t *testing.T) {
+	// Setup mock server (no responses, the request will hang)
+	mockServer := NewMockWSServer()
+	defer mockServer.Close()
+
+	psyNet := NewPsyNet()
+	rpc, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session", "test-player")
+	if err != nil {
+		t.Fatalf("Failed to establish socket: %v", err)
+	}
+
+	go rpc.readMessages()
+	rpc.schedulePing()
+	defer rpc.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	errCh := make(chan error, 1)
+	go func() {
+		var result map[string]interface{}
+		errCh <- rpc.sendRequestSync(ctx, "Test/Pending", map[string]interface{}{}, &result)
+	}()
+
+	// Wait until the request is registered as pending
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		rpc.mu.Lock()
+		pending := len(rpc.pendingReqs)
+		rpc.mu.Unlock()
+		if pending == 1 {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("Request never became pending")
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+
+	rpc.Close()
+
+	select {
+	case err := <-errCh:
+		if !errors.Is(err, ErrConnectionClosed) {
+			t.Errorf("Expected ErrConnectionClosed, got %v", err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("sendRequestSync did not return after Close")
+	}
+}
+
+// Same as above, but the server drops the connection (what PsyNet does
+// on DuplicateLogin), so Close() runs from readMessages.
+func TestPsyNetRPC_ServerDropsConnectionWithPendingRequest(t *testing.T) {
+	mockServer := NewMockWSServer()
+	defer mockServer.Close()
+	mockServer.SetCloseOnRequest(true)
+
+	psyNet := NewPsyNet()
+	rpc, err := psyNet.establishSocket(mockServer.URL(), "test-token", "test-session", "test-player")
+	if err != nil {
+		t.Fatalf("Failed to establish socket: %v", err)
+	}
+
+	go rpc.readMessages()
+	rpc.schedulePing()
+	defer rpc.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var result map[string]interface{}
+	err = rpc.sendRequestSync(ctx, "Test/Dropped", map[string]interface{}{}, &result)
+	if !errors.Is(err, ErrConnectionClosed) {
+		t.Errorf("Expected ErrConnectionClosed, got %v", err)
+	}
+	if rpc.IsConnected() {
+		t.Error("Expected connection to be marked as closed")
 	}
 }
 

@@ -14,6 +14,10 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// ErrConnectionClosed is returned by a request that was still waiting
+// for its response when the WebSocket connection was closed.
+var ErrConnectionClosed = errors.New("websocket connection closed")
+
 type emptyRequest struct{}
 
 type EventType int
@@ -293,7 +297,17 @@ func (p *PsyNetRPC) sendRequestAsync(ctx context.Context, service string, data i
 
 func (p *PsyNetRPC) awaitResponse(ctx context.Context, respCh <-chan *PsyResponse, result interface{}) error {
 	select {
-	case response := <-respCh:
+	case response, ok := <-respCh:
+		if !ok || response == nil {
+			// The channel was closed without a response: either Close()
+			// ran while this request was pending, or the request's
+			// context ended and the cleanup goroutine got here first.
+			if err := ctx.Err(); err != nil {
+				return err
+			}
+			return ErrConnectionClosed
+		}
+
 		if response.Error != nil {
 			return response.Error
 		}
