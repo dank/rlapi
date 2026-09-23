@@ -17,9 +17,10 @@ jobs:
         env:
           GAME_VERSION: ${{ github.event.client_payload.game_version }}
           FEATURE_SET: ${{ github.event.client_payload.feature_set }}
+          BUILD_SECRET: ${{ github.event.client_payload.build_secret }}
         run: |
-          if [ -z "$GAME_VERSION" ] || [ -z "$FEATURE_SET" ]; then
-            echo "Error: game_version and feature_set must not be empty"
+          if [ -z "$GAME_VERSION" ] || [ -z "$FEATURE_SET" ] || [ -z "$BUILD_SECRET" ]; then
+            echo "Error: game_version, feature_set and build_secret must not be empty"
             exit 1
           fi
 
@@ -27,9 +28,11 @@ jobs:
         env:
           GAME_VERSION: ${{ github.event.client_payload.game_version }}
           FEATURE_SET: ${{ github.event.client_payload.feature_set }}
+          BUILD_SECRET: ${{ github.event.client_payload.build_secret }}
         run: |
           sed -i "s/gameVersion\s*=\s*\"[^\"]*\"/gameVersion  = \"$GAME_VERSION\"/" psynet.go
           sed -i "s/featureSet\s*=\s*\"[^\"]*\"/featureSet   = \"$FEATURE_SET\"/" psynet.go
+          sed -i "s/buildSecret\s*=\s*\"[^\"]*\"/buildSecret  = \"$BUILD_SECRET\"/" psynet.go
 
       - name: Check for diff
         run: |
@@ -43,6 +46,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GAME_VERSION: ${{ github.event.client_payload.game_version }}
           FEATURE_SET: ${{ github.event.client_payload.feature_set }}
+          BUILD_SECRET: ${{ github.event.client_payload.build_secret }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -51,7 +55,15 @@ jobs:
           git add psynet.go
           git commit -m "Bump version to \`$GAME_VERSION\` (\`$FEATURE_SET\`)"
           git push origin "$BRANCH"
+          BODY=$(cat <<EOF
+          | Constant | Value |
+          | --- | --- |
+          | \`gameVersion\` | \`$GAME_VERSION\` |
+          | \`featureSet\` | \`$FEATURE_SET\` |
+          | \`buildSecret\` | \`$BUILD_SECRET\` |
+          EOF
+          )
           gh pr create \
             --title "Bump version to \`$GAME_VERSION\` (\`$FEATURE_SET\`)" \
-            --body "Updated \`gameVersion\` to \`$GAME_VERSION\` and \`featureSet\` to \`$FEATURE_SET\`." \
+            --body "$BODY" \
             --base master || true
