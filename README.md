@@ -21,7 +21,7 @@ go get github.com/dank/rlapi
 ```
 
 ### Game Version
-The SDK ships with the game version, feature set and build secret of the latest known build. These change with every game update, so they can be overridden without waiting for a new release:
+The SDK ships with the game version, feature set, and build secret of the latest known build. These change with every game update, so they can be overridden without waiting for a new release:
 ```go
 psynet := rlapi.NewPsyNet()
 psynet.SetVersion("<game version>", "<feature set>")

@@ -97,7 +97,6 @@ func (p *PsyNet) SetLogger(logger *slog.Logger) {
 }
 
 // SetVersion overrides the default game version and feature set.
-// The build secret usually changes alongside them, see SetBuildSecret.
 func (p *PsyNet) SetVersion(gameVersion, featureSet string) {
 	p.gameVersion = gameVersion
 	p.featureSet = featureSet
