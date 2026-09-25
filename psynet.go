@@ -44,6 +44,7 @@ type PsyNet struct {
 	gameVersion string
 	featureSet  string
 	buildID     string
+	buildSecret string
 }
 
 type PsyRequest struct {
@@ -74,6 +75,7 @@ func NewPsyNet() *PsyNet {
 		gameVersion: gameVersion,
 		featureSet:  featureSet,
 		buildID:     strconv.Itoa(int(decodeBuildID(gameVersion))),
+		buildSecret: buildSecret,
 	}
 }
 
@@ -86,6 +88,7 @@ func NewPsyNetWithLogger(logger *slog.Logger) *PsyNet {
 		gameVersion: gameVersion,
 		featureSet:  featureSet,
 		buildID:     strconv.Itoa(int(decodeBuildID(gameVersion))),
+		buildSecret: buildSecret,
 	}
 }
 
@@ -103,6 +106,16 @@ func (p *PsyNet) SetVersion(gameVersion, featureSet string) {
 // GetVersion returns the current game version and feature set.
 func (p *PsyNet) GetVersion() (gameVersion, featureSet string) {
 	return p.gameVersion, p.featureSet
+}
+
+// SetBuildSecret overrides the default PsyBuildSecret sent with HTTP requests.
+func (p *PsyNet) SetBuildSecret(buildSecret string) {
+	p.buildSecret = buildSecret
+}
+
+// GetBuildSecret returns the current build secret.
+func (p *PsyNet) GetBuildSecret() string {
+	return p.buildSecret
 }
 
 func (p *PsyNet) establishSocket(url string, playerID PlayerID, psyToken string, sessionID string) (*PsyNetRPC, error) {
@@ -144,7 +157,7 @@ func (p *PsyNet) postJSON(path []string, params interface{}, result interface{})
 	req.Header.Set("PsyEnvironment", "Prod")
 	req.Header.Set("PsyRequestID", p.requestID.getID())
 	req.Header.Set("PsySig", generatePsySig(body))
-	req.Header.Set("PsyBuildSecret", buildSecret)
+	req.Header.Set("PsyBuildSecret", p.buildSecret)
 
 	resp, err := p.client.Do(req)
 	if err != nil {

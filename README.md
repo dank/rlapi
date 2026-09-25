@@ -20,6 +20,14 @@ Comprehensive examples are available in the [`examples`](examples) directory.
 go get github.com/dank/rlapi
 ```
 
+### Game Version
+The SDK ships with the game version, feature set, and build secret of the latest known build. These change with every game update, so they can be overridden without waiting for a new release:
+```go
+psynet := rlapi.NewPsyNet()
+psynet.SetVersion("<game version>", "<feature set>")
+psynet.SetBuildSecret("<build secret>")
+```
+
 ### Authentication
 Rocket League authentication always goes through [Epic Online Services (EOS)](https://dev.epicgames.com/docs/web-api-ref/authentication), either via the Epic Games Store (EGS) or by exchanging a Steam session ticket for an EOS token.
 
@@ -86,6 +94,7 @@ _(Values may be outdated)_
 | PsySig         | ✅    | ✅  |                                                                        | Base64-encoded HMAC signature of the body                        |
 | PsyBuildID     | ✅    | ✅  | 151471783                                                              | Varies by build                                                  |
 | PsyEnvironment | ✅    | ✅  | Prod                                                                   | Varies by build                                                  |
+| PsyBuildSecret | ✅    |    |                                                                        | Varies by build                                                  |
 | FeatureSet     | ✅    |    | PrimeUpdate55_1                                                        | Varies by build                                                  |
 | User-Agent     |      | ✅  | RL Win/250811.43331.492665 gzip                                        | Varies by build                                                  |
 | User-Agent     | ✅    |    | RL Win/250811.43331.492665 gzip (x86_64-pc-win32) curl-7.67.0 Schannel | Varies by build                                                  |
@@ -110,6 +119,7 @@ The base URL for HTTP requests is: `https://api.rlpp.psynet.gg/rpc/`.
 PsyRequestID: PsyNetMessage_X_0 
 PsyBuildID: 151471783
 PsyEnvironment: Prod
+PsyBuildSecret: <build secret>
 User-Agent: User-Agent: RL Win/250811.43331.492665 gzip (x86_64-pc-win32) curl-7.67.0 Schannel
 PsySig: <HMAC signature>
 Content-Type: application/x-www-form-urlencoded
