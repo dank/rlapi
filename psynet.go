@@ -19,9 +19,9 @@ import (
 
 const (
 	baseURL      = "https://api.rlpp.psynet.gg/rpc"
-	gameVersion  = "261001.2867.529371"
-	featureSet   = "PrimeUpdate60"
-	buildSecret  = "1c72102bca07fb3ba34ef640656901df0658107ffe17bb3a6e9cd1cc578392ea"
+	gameVersion  = "261013.63066.530866"
+	featureSet   = "PrimeUpdate60_FFE7A62B41040BB67F8829FD67F2EE8A"
+	buildSecret  = "76656a5b51ec57a13549eef732c8a8367638aa3a7989bade1f7e4e5f93d57625"
 	psySigKey    = "c338bd36fb8c42b1a431d30add939fc7"
 	pingInterval = 20 * time.Second
 	pongTimeout  = 10 * time.Second
