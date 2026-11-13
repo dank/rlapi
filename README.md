@@ -110,9 +110,9 @@ The base URL for HTTP requests is: `https://api.rlpp.psynet.gg/rpc/`.
 > [!NOTE]
 > When the API refers to a "Player ID", it typically expects the following format:
 >  ```
-> <platform>|<platform-specific account ID>|0
+> <platform>|<platform-specific account ID>|<splitscreen ID>
 > ```
-> For example, on Steam: `Steam|76561197960287930|0`. The final 0 is always included, though its purpose is unknown.
+> For example, on Steam: `Steam|76561197960287930|0`. The trailing number represents the Rocket League splitscreen player index (`0` for the primary player, `1`+ for secondary local split-screen players).
 
 ###### Request
 ```json5

@@ -5,7 +5,8 @@ import (
 	"strings"
 )
 
-// PlayerID represents a unique player identifier in the format "Platform|ID|0"
+// PlayerID represents a unique player identifier in the format "Platform|ID|SplitscreenID"
+// where SplitscreenID is typically 0 for the primary player.
 type PlayerID string
 
 // Platform represents a gaming platform
